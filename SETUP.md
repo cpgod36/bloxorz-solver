@@ -90,10 +90,7 @@ Nếu không chắc cách gỡ xung đột ở vùng code của người khác, 
 
 ## 4. Dùng AI agent
 
-AI được phép dùng, nhưng có hai điều bắt buộc:
-
-1. **Bạn phải hiểu và giải thích được mọi dòng code mình nộp.** Giảng viên có quyền gọi vấn đáp ngẫu nhiên. Nếu agent viết code, hãy yêu cầu nó giải thích lại cho đến khi bạn tự trình bày được.
-2. **Ghi log việc dùng AI** vào `docs/ai-log/<tên-bạn>.md`. Báo cáo **bắt buộc** có phụ lục về cách dùng AI và các prompt đã dùng. Agent được dặn tự nhắc và tự ghi log sau mỗi việc lớn, nhưng bạn nên kiểm tra lại. Cách ghi xem trong [docs/ai-log/README.md](docs/ai-log/README.md).
+AI được phép dùng, nhưng **bạn phải hiểu và giải thích được mọi dòng code mình nộp**. Giảng viên có quyền gọi vấn đáp ngẫu nhiên. Nếu agent viết code, hãy yêu cầu nó giải thích lại cho đến khi bạn tự trình bày được.
 
 Một số lưu ý thêm:
 - Cho agent biết bạn là ai và đang làm việc gì, ví dụ: *"Mình là Nghĩa, đang làm BFS theo docs/PHAN_CONG.md"*. Nhờ vậy agent sẽ giữ đúng vùng code của bạn.
@@ -107,5 +104,4 @@ Một số lưu ý thêm:
 - [ ] Code chạy được, `python -m pytest tests` pass.
 - [ ] Có test cho phần mới (bắt buộc với `core/` và `solvers/`).
 - [ ] PR đã được review và merge vào `main`.
-- [ ] Đã ghi log AI (nếu có dùng).
 - [ ] Đã cập nhật tiến độ với nhóm. Lịch và mốc xem tại [docs/PHAN_CONG.md](docs/PHAN_CONG.md).

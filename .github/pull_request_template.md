@@ -12,7 +12,6 @@
 - [ ] Có test cho phần mới (bắt buộc với `core/`, `solvers/`)
 - [ ] Không đụng vùng code của người khác, hoặc đã tag người đó review
 - [ ] Không thêm thư viện mới, hoặc đã cập nhật `requirements.txt` và báo nhóm
-- [ ] Đã ghi log dùng AI vào `docs/ai-log/` (nếu có dùng)
 
 ## Ghi chú cho người review
 
