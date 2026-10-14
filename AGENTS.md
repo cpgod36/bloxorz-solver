@@ -84,7 +84,3 @@ The course may hold random oral interviews, and each member must be able to expl
 - Point out anything they should be ready to defend, such as the cost-function choice, heuristic admissibility, or how expanded nodes are counted.
 
 Prefer clear code over clever code.
-
-## AI usage log (required by the report)
-
-The report must include an appendix describing how AI was used and which prompts were used. After each significant task, append an entry to `docs/ai-log/<member>.md` using the format in [docs/ai-log/README.md](docs/ai-log/README.md): date, tool, the member's prompt(s), quoted or faithfully summarized, what was produced, and what the member changed or verified. If you cannot write the file, remind the member to do it.
