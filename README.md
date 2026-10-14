@@ -15,6 +15,8 @@ Tái hiện game **Bloxorz** có GUI và giải tự động bằng **BFS, DFS/I
 | 24120103 | Hoàng Trọng Nghĩa | BFS, DFS/IDS, metrics, benchmark, biểu đồ |
 | 24120091 | Lâm Duy Minh | UCS, A\*, bộ màn test |
 
+**Thành viên mới vào repo: đọc [SETUP.md](SETUP.md) trước.** Agent AI đọc [AGENTS.md](AGENTS.md).
+
 Chi tiết phân công và lịch: [docs/PHAN_CONG.md](docs/PHAN_CONG.md) · Đề bài: [docs/AI - Project 1.md](docs/AI%20-%20Project%201.md)
 
 ## Cấu trúc thư mục
@@ -47,7 +49,4 @@ python -m pytest tests
 
 ## Quy ước làm việc
 
-- Không commit thẳng lên `main`. Mỗi việc một branch: `feat/<tên-việc>`, `fix/<tên-lỗi>`.
-- Mở Pull Request vào `main`, cần ít nhất 1 người review (mặc định là leader).
-- Chạy `python -m pytest tests` trước khi mở PR.
-- **Không tự viết lại thuật toán tìm kiếm bằng thư viện có sẵn**: đề bắt buộc tự cài đặt.
+Xem [SETUP.md](SETUP.md): branch, commit, Pull Request, vùng code của từng người, quy định dùng AI.
