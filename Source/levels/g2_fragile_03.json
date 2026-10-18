@@ -1,8 +1,14 @@
 {
-  "name": "Level 2.3 - The Orange Chasm",
+  "name": "Level 2.3 - Shattered Labyrinth",
   "grid": [
-    "####.....####",
-    "#S##FF#FF#G##",
-    "####.....####"
-  ]
+    "..###..####.",
+    "##S#FFFF..#.",
+    "###FFFFF.##.",
+    "#..FFFFF..##",
+    "###..#..#FF#",
+    "..####..#FG#",
+    "..#FF####F#.",
+    "..####..###."
+  ],
+  "switches": []
 }
