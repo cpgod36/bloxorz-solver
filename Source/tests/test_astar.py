@@ -102,8 +102,8 @@ def test_heuristic_split_switch_teleport_bound():
     assert initial_h >= 0.0
 
 
-@pytest.mark.parametrize("level_file", sorted(LEVELS_DIR.glob("g1_basic_*.json")))
-def test_all_g1_basic_levels_are_solved_by_astar(level_file: Path):
+@pytest.mark.parametrize("level_file", sorted(LEVELS_DIR.glob("g*.json")))
+def test_all_committed_levels_are_solved_by_astar(level_file: Path):
     level = load_level(level_file)
     problem = BloxorzProblem(level)
 

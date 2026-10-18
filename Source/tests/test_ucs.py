@@ -58,8 +58,8 @@ def test_ucs_unit_cost_vs_physics_cost():
     assert problem.is_goal(replay(problem, path_phys)[-1])
 
 
-@pytest.mark.parametrize("level_file", sorted(LEVELS_DIR.glob("g1_basic_*.json")))
-def test_all_g1_basic_levels_are_solvable(level_file: Path):
+@pytest.mark.parametrize("level_file", sorted(LEVELS_DIR.glob("g*.json")))
+def test_all_committed_levels_are_solvable_by_ucs(level_file: Path):
     level = load_level(level_file)
     problem = BloxorzProblem(level)
 
