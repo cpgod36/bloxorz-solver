@@ -87,6 +87,10 @@ Mỗi ô trên bàn cờ Bloxorz thuộc một trong các loại ô sau. Ký hi�
   - Tạo ra 2 khối 1x1x1 tại hai tọa độ chỉ định trước trong `targets = (t1, t2)`.
   - Khối tại `t1` (`targets[0]`) mặc định nhận quyền điều khiển đầu tiên.
   - Chuyển `State` sang trạng thái tách: `block = None`, `cubes = (t1, t2)`.
+- **Quy định về tọa độ `targets`:**
+  - **Rơi vào cầu đang đóng:** Khối lập tức rơi xuống vực $\rightarrow$ Nước đi không hợp lệ (`result = None`).
+  - **Hai `targets` kề sát nhau:** Không hợp lệ. Bộ nạp màn chơi `level.py` sẽ báo lỗi `LevelFormatError` ngay khi đọc file JSON (tránh tình trạng vừa tách ra đã lập tức sáp nhập lại).
+  - **Xuất hiện trên công tắc mềm:** Khối lập phương xuất hiện tại `targets` được tính là **mới bước vào** $\rightarrow$ **Kích hoạt** công tắc mềm tại ô đó.
 
 ### 3.6. Ô Đích (`Tile.GOAL` — Ký tự `G`)
 1. **Khối 1x1x2 đứng (`STANDING`):**
@@ -100,7 +104,7 @@ Mỗi ô trên bàn cờ Bloxorz thuộc một trong các loại ô sau. Ký hi�
 
 ## 4. Các Trường hợp Biên (Edge Cases) & Quyết định Nhóm đã Thống nhất
 
-Phần này làm rõ toàn bộ các góc khuất và tình huống đặc thù mà đề bài chưa nêu rõ, do thành viên **Long** chốt quy ước:
+Phần này làm rõ toàn bộ các góc khuất và tình huống đặc thù mà đề bài chưa nêu rõ, do thành viên **Long** chốt quy ước (đã được Leader **Cao** duyệt và thống nhất):
 
 ### 4.1. Edge Case 1: Cầu bị rút dưới chân khối (Tự làm sập cầu)
 - **Mô tả:** Khối 1x1x2 lăn đến tư thế nằm: một nửa thân đè lên công tắc mềm `O`, nửa còn lại nằm trên cây cầu đang mở `=`. Công tắc `O` được kích hoạt và làm đóng chính cây cầu đó lại (`=` thành `-`).
@@ -113,9 +117,10 @@ Phần này làm rõ toàn bộ các góc khuất và tình huống đặc thù 
 - **Quy ước xử lý:**
   - Công tắc chỉ được ấn khi có khối **mới bước chân vào** trong lượt đi hiện tại.
   - Khối A đứng yên tại chỗ không tạo thêm lực tác động mới lên công tắc $\rightarrow$ **Không kích hoạt lại công tắc ở mỗi bước đi của Khối B**.
+  - **Triển khai kỹ thuật:** Trong hàm `pressed_switches()` (`rules.py`), ở chế độ tách (`state.is_split`), chỉ duyệt kiểm tra ô của khối vừa di chuyển là `state.cubes[0]` (`controlled`), bỏ qua khối đứng yên `state.cubes[1]` (`other`). (Cao đã đồng ý cho Long sửa hàm này ở phần lõi).
 
 ### 4.3. Edge Case 3: Thao tác đổi lượt `SWITCH` (phím Space / ký hiệu `S`)
-- **Mô tả:** Khối A đang đứng trên một công tắc mềm `O`. Người chơi bấm phím `SWITCH` để chuyển quyền điều khiển sang Khối B (hoặc người lại chuyển từ khối B sang khối A).
+- **Mô tả:** Khối A đang đứng trên một công tắc mềm `O`. Người chơi bấm phím `SWITCH` để chuyển quyền điều khiển sang Khối B (hoặc ngược lại chuyển từ khối B sang khối A).
 - **Quy ước xử lý:**
   - Thao tác `SWITCH` không làm khối dịch chuyển vị trí cũng như tạo lực tác động mới lên công tắc $\rightarrow$ **Không kích hoạt công tắc**.
   - Không gọi hàm `apply_effects`, giữ nguyên trạng thái cầu `state.bridges`.
@@ -123,12 +128,13 @@ Phần này làm rõ toàn bộ các góc khuất và tình huống đặc thù 
 ### 4.4. Edge Case 4: Cơ chế Tự động Ghép khối (Merge)
 - **Mô tả:** Hai khối 1x1x1 di chuyển đến gần nhau.
 - **Quy ước xử lý:**
-  - **Điều kiện ghép:** Hai khối phải nằm ở **hai ô liền kề cạnh** (4-connected, khoảng cách Manhattan $|r_1 - r_2| + |c_1 - c_2| = 1$).
+  - **Điều kiện ghép:** Hai khối phải nằm ở **hai ô liền kề cạnh** (4-connected, khoảng cách Manhattan $|r_1 - r_2| + |c_1 - c_2| = 1$), tức là 2 ô liền kề theo hàng hoặc 2 ô liền kề theo cột.
   - **Kề chéo:** Nếu hai khối chạm nhau theo đường chéo (khoảng cách Manhattan = 2, ví dụ `(r, c)` và `(r+1, c+1)`) $\rightarrow$ **KHÔNG ghép khối**.
   - **Hình thái sau ghép:** Tự động sáp nhập tức thì thành **khối nằm 1x1x2**:
     - Cùng hàng kề cột (`(r, c)` và `(r, c + 1)`): Tạo thành `Block(r, c, Orientation.HORIZONTAL)`.
     - Cùng cột kề hàng (`(r, c)` và `(r + 1, c)`): Tạo thành `Block(r, c, Orientation.VERTICAL)`.
     - **Không bao giờ ghép thành tư thế đứng (`STANDING`)**.
+  - **Ghép khối trên công tắc mềm:** Nếu Khối B di chuyển đến ghép với Khối A trong khi A đang đứng sẵn trên một công tắc mềm `O`, khối nằm 1x1x2 sau khi ghép **KHÔNG kích hoạt lại** công tắc dưới chân A (do công tắc đó đã bị A đè từ trước và chưa từng được nhả ra).
 
 ### 4.5. Edge Case 5: Va chạm giữa hai khối 1x1x1
 - **Mô tả:** Khối đang điều khiển cố gắng bước vào đúng ô mà khối thứ hai đang đứng.
@@ -153,6 +159,18 @@ Phần này làm rõ toàn bộ các góc khuất và tình huống đặc thù 
   - Ngay khi Khối B đặt chân lên `F`, hai khối liền kề nhau và lập tức ghép thành khối 1x1x2 ở **tư thế nằm**.
   - Vì khối nằm có trọng lượng phân bổ đều 50% - 50% nên ô `F` **an toàn, không bị sập**.
 
+### 4.9. Edge Case 9: Khối xuất hiện tại `targets` của công tắc tách là công tắc mềm
+- **Mô tả:** Khối 1x1x2 đứng kích hoạt công tắc tách `T`, hai khối 1x1x1 xuất hiện tại `targets = (t1, t2)`. Tại vị trí `t1` hoặc `t2` có một công tắc mềm `O`.
+- **Quy ước xử lý:**
+  - Khối lập phương vừa teleport đáp xuống ô `targets` được tính là một sự kiện **mới bước vào ô**.
+  - Do đó, công tắc mềm tại ô đó **được kích hoạt bình thường** ngay sau khi tách.
+
+### 4.10. Edge Case 10: Tọa độ `targets` rơi vào cầu đang đóng hoặc kề sát nhau
+- **Mô tả:** Vị trí xuất hiện của 2 khối lập phương sau khi tách rơi vào các trường hợp bất thường.
+- **Quy ước xử lý:**
+  - **Rơi vào cầu đang đóng:** Cầu đóng xem như ô `VOID`. Khối vừa teleport đến sẽ bị mất sàn đỡ $\rightarrow$ **Khối rơi xuống vực $\rightarrow$ Nước đi không hợp lệ (`result = None`)**.
+  - **Hai `targets` kề sát nhau:** Đây là cấu hình màn chơi không hợp lệ (vì tách ra sẽ lập tức bị ghép lại). Bộ nạp màn chơi `level.py` sẽ kiểm tra và báo lỗi `LevelFormatError` ngay khi nạp file JSON.
+
 ---
 
 ## 5. Nguyên tắc Triển khai Mã nguồn (`rules.py`)
@@ -163,8 +181,11 @@ Khi hiện thực hóa các quy ước trên vào mã nguồn tại `Source/blox
    - Tuyệt đối không thay đổi thuộc tính của đối tượng `Level`.
    - Hàm `apply_effects(level, state)` luôn trả về một thể hiện `State` mới (hoặc trả về chính `state` nếu không có hiệu ứng nào kích hoạt).
 2. **Kiểm tra tính hợp lệ sau hiệu ứng:**
-   - Trong `apply_effects`, sau khi cập nhật bitmask cầu mới, phải kiểm tra lại xem mọi ô khối đang chiếm đóng có còn hợp lệ hay không (`is_passable`). Nếu có ô nào biến thành cầu đóng, trả về `None` (khối rơi).
+   - Trong `apply_effects`, sau khi cập nhật bitmask cầu mới, phải kiểm tra lại xem mọi ô khối đang chiếm đóng có còn hợp lệ hay không (`is_passable`). Nếu có ô nào biến thành cầu đóng (bao gồm cả trường hợp teleport vào cầu đóng), trả về `None` (khối rơi).
 3. **Thứ tự xử lý một nước đi (`problem.result`):**
    - Bước 1: Tính vị trí hình học mới sau khi lăn / bước (`roll` / `step`).
    - Bước 2: Kiểm tra tính hợp lệ cơ bản bằng `rules.is_legal` (biên, void, cầu đóng ban đầu, đứng trên ô fragile).
    - Bước 3: Áp dụng hiệu ứng ô đặc biệt bằng `rules.apply_effects` (công tắc, đảo cầu, tách khối, ghép khối, kiểm tra sập cầu dưới chân).
+4. **Hàm `pressed_switches`:**
+   - Nếu `state.is_split` là True: Chỉ xét ô của khối vừa di chuyển `state.cubes[0]`.
+   - Nếu khối nguyên 1x1x2: Xét toàn bộ các ô bị chiếm `state.cells()`.
