@@ -13,7 +13,7 @@ def physics_cost(state: State, action: Action, next_state: State) -> float:
     """Non-uniform cost function based on block mechanics and potential energy.
 
     - Standing up (next_state.is_standing): Lifting the center of mass from height
-      0.5 to 1.0 requires positive work against gravity -> cost = 2.0.
+      0.5 to 1.0 requires positive work against gravity -> cost = 3.0.
     - Lying down or rolling sideways: Gravity assists or center of mass stays at 0.5 -> cost = 1.0.
     - Splitting / switching cubes: Standard movement cost -> cost = 1.0.
 
@@ -23,7 +23,7 @@ def physics_cost(state: State, action: Action, next_state: State) -> float:
       - Allows admissible heuristics for A* (scaled by c_min = 1.0).
     """
     if next_state.is_standing:
-        return 2.0
+        return 3.0
     return 1.0
 
 
