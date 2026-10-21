@@ -81,3 +81,35 @@ def test_metrics_tracker_restores_tracemalloc_state():
         assert tracemalloc.is_tracing()
     finally:
         tracemalloc.stop()
+
+
+def test_metrics_tracker_subtracts_baseline_memory_when_already_tracing():
+    """Verify that pre-allocated memory when tracemalloc is already running is not added to peak."""
+    tracemalloc.start()
+    try:
+        # Pre-allocate 5MB before entering the tracker
+        _baseline_data = bytearray(5 * 1024 * 1024)
+
+        with MetricsTracker() as tracker:
+            # Inside the search, allocate a modest 50KB block
+            _search_data = bytearray(50 * 1024)
+            result = tracker.make_result([])
+
+        # peak_memory should reflect only search allocations (~50KB), NOT the 5MB baseline
+        assert 50 * 1024 <= result.metrics.peak_memory < 200 * 1024
+    finally:
+        tracemalloc.stop()
+
+
+def test_metrics_tracker_trace_memory_false():
+    """Verify that trace_memory=False disables tracemalloc overhead and reports 0 peak memory."""
+    was_tracing = tracemalloc.is_tracing()
+    with MetricsTracker(trace_memory=False) as tracker:
+        tracker.count_expansion()
+        _ = bytearray(100 * 1024)
+        result = tracker.make_result([])
+
+    assert result.metrics.peak_memory == 0
+    assert result.metrics.expanded_nodes == 1
+    assert tracemalloc.is_tracing() == was_tracing
+

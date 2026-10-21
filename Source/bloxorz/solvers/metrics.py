@@ -67,28 +67,38 @@ class MetricsTracker:
       (e.g., during pytest or an outer benchmark harness), it resets peak memory without
       stopping the global tracing. If tracemalloc was not running, it starts it on entry
       and cleanly stops it on exit.
+    - Accurately computes incremental peak memory: records a baseline memory right after
+      reset_peak() in __enter__ and subtracts baseline from peak in make_metrics, preventing
+      pre-allocated memory from polluting the search measurement.
+    - Supports ``trace_memory=False`` to bypass tracemalloc overhead during benchmarks.
     - Records start timestamp via time.perf_counter().
     - Thread-safe for sequential single-thread searches.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, trace_memory: bool = True) -> None:
+        self.trace_memory: bool = trace_memory
         self.expanded_nodes: int = 0
         self._start_time: float = 0.0
         self._was_tracing: bool = False
+        self._baseline_memory: int = 0
 
     def __enter__(self) -> MetricsTracker:
-        # Check if tracemalloc was already activated in the surrounding environment
-        self._was_tracing = tracemalloc.is_tracing()
-        if not self._was_tracing:
-            tracemalloc.start()
-        # Reset peak memory counter so we only measure allocations during this search
-        tracemalloc.reset_peak()
+        if self.trace_memory:
+            # Check if tracemalloc was already activated in the surrounding environment
+            self._was_tracing = tracemalloc.is_tracing()
+            if not self._was_tracing:
+                tracemalloc.start()
+            # Reset peak memory counter for this search
+            tracemalloc.reset_peak()
+            # Record baseline so pre-existing memory allocations are subtracted from peak
+            self._baseline_memory, _ = tracemalloc.get_traced_memory()
+
         self._start_time = time.perf_counter()
         return self
 
     def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         # Only stop tracemalloc if we were the one who started it
-        if not self._was_tracing and tracemalloc.is_tracing():
+        if self.trace_memory and not self._was_tracing and tracemalloc.is_tracing():
             tracemalloc.stop()
 
     def count_expansion(self) -> None:
@@ -109,10 +119,15 @@ class MetricsTracker:
             A populated, immutable SearchMetrics instance.
         """
         elapsed = time.perf_counter() - self._start_time
-        _, peak = tracemalloc.get_traced_memory()
+        if self.trace_memory:
+            _, peak = tracemalloc.get_traced_memory()
+            peak_memory = max(0, peak - self._baseline_memory)
+        else:
+            peak_memory = 0
+
         return SearchMetrics(
             search_time=elapsed,
-            peak_memory=peak,
+            peak_memory=peak_memory,
             expanded_nodes=self.expanded_nodes,
             solution_length=len(path) if path is not None else 0,
         )

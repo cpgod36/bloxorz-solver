@@ -48,7 +48,7 @@ def _reconstruct_path(
     return actions
 
 
-def bfs(problem: BloxorzProblem) -> SearchResult:
+def bfs(problem: BloxorzProblem, trace_memory: bool = True) -> SearchResult:
     """Solve the Bloxorz problem using Breadth-First Search (BFS).
 
     Algorithm characteristics:
@@ -73,13 +73,15 @@ def bfs(problem: BloxorzProblem) -> SearchResult:
     Args:
         problem: The Bloxorz search problem instance providing ``initial_state``,
             ``successors(state)``, and ``is_goal(state)``.
+        trace_memory: Whether to track peak memory using tracemalloc (default: True).
+            Can be set to False to eliminate tracemalloc overhead during benchmarks.
 
     Returns:
         A SearchResult tuple: ``(path, metrics)``.
         - ``path``: List of Actions to solve the stage, or ``None`` if unsolvable.
         - ``metrics``: SearchMetrics with time, peak memory, expanded nodes, and path length.
     """
-    with MetricsTracker() as tracker:
+    with MetricsTracker(trace_memory=trace_memory) as tracker:
         initial = problem.initial_state
 
         # Edge case: initial state is already the goal (0 moves, 0 expansions)

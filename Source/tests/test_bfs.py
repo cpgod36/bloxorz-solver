@@ -1,5 +1,6 @@
 """Unit tests for the Breadth-First Search (BFS) solver."""
 
+from dataclasses import replace
 from pathlib import Path
 
 from bloxorz.core import (
@@ -68,19 +69,8 @@ def test_bfs_unsolvable_level():
 
 def test_bfs_start_is_already_goal():
     """Verify that if the initial state is already at the goal, 0 moves and 0 expansions occur."""
-    p = make_problem("S#G")
-    # Manually configure a problem where start and goal are the same tile
-    p.level = p.level.__class__(
-        name="immediate_goal",
-        grid=p.level.grid,
-        start=p.level.goal,
-        goal=p.level.goal,
-    )
-    p.initial_state = p.initial_state.__class__(
-        block=p.initial_state.block.__class__(p.level.goal[0], p.level.goal[1], p.initial_state.block.orientation),
-        cubes=None,
-        bridges=0,
-    )
+    level = parse_level({"grid": ["S#G"]})
+    p = BloxorzProblem(replace(level, start=level.goal))
 
     path, metrics = bfs(p)
     assert path == []
@@ -125,3 +115,16 @@ def test_bfs_deterministic():
     assert res1.path == res2.path
     assert res1.metrics.expanded_nodes == res2.metrics.expanded_nodes
     assert res1.metrics.solution_length == res2.metrics.solution_length
+
+
+def test_bfs_with_trace_memory_false():
+    """Verify that BFS runs properly and sets peak_memory=0 when trace_memory=False."""
+    p = BloxorzProblem(load_level(FIXTURES / "classic_01.json"))
+    res = bfs(p, trace_memory=False)
+    assert res.path is not None
+    assert len(res.path) == 7
+    assert res.metrics.solution_length == 7
+    assert res.metrics.peak_memory == 0
+    assert res.metrics.search_time > 0
+    assert res.metrics.expanded_nodes > 0
+
