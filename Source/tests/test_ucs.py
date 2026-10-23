@@ -46,16 +46,40 @@ def test_ucs_unsolvable_level():
 
 
 def test_ucs_unit_cost_vs_physics_cost():
-    level = parse_level({"grid": ["S#####", "######", "#####G"]})
+    """Verify that physics_cost produces a distinct path from unit_cost (BFS),
+    and that the total physics cost of the UCS path is strictly less than that of the unit_cost path.
+    """
+    level = load_level(LEVELS_DIR / "g1_basic_03.json")
     problem = BloxorzProblem(level)
 
-    path_unit, metrics_unit = solve_ucs(problem, cost_fn=unit_cost)
-    path_phys, metrics_phys = solve_ucs(problem, cost_fn=physics_cost)
+    path_unit, _ = solve_ucs(problem, cost_fn=unit_cost)
+    path_phys, _ = solve_ucs(problem, cost_fn=physics_cost)
 
     assert path_unit is not None
     assert path_phys is not None
     assert problem.is_goal(replay(problem, path_unit)[-1])
     assert problem.is_goal(replay(problem, path_phys)[-1])
+
+    # The two cost functions must choose different paths
+    assert path_unit != path_phys
+
+    # Unit cost optimizes step count: len(path_unit) < len(path_phys)
+    assert len(path_unit) < len(path_phys)
+
+    # Physics cost optimizes total energy: cost(path_phys) < cost(path_unit)
+    def total_phys_cost(plan: list[Action]) -> float:
+        st = problem.initial_state
+        total = 0.0
+        for a in plan:
+            nxt = problem.result(st, a)
+            assert nxt is not None
+            total += physics_cost(st, a, nxt)
+            st = nxt
+        return total
+
+    cost_of_unit_path = total_phys_cost(path_unit)
+    cost_of_phys_path = total_phys_cost(path_phys)
+    assert cost_of_phys_path < cost_of_unit_path
 
 
 @pytest.mark.parametrize("level_file", sorted(LEVELS_DIR.glob("g*.json")))

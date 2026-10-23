@@ -68,6 +68,10 @@ def test_name_defaults_to_file_stem(tmp_path):
          "two cells"),
         ({"grid": ["ST#G."], "switches": [{"pos": [0, 1], "targets": [[0, 2], [0, 4]]}]},
          "void or off the board"),
+        ({"grid": ["ST##G"], "switches": [{"pos": [0, 1], "targets": [[0, 2], [0, 3]]}]},
+         "must not be adjacent"),
+        ({"grid": ["ST#", "##G"], "switches": [{"pos": [0, 1], "targets": [[0, 2], [1, 2]]}]},
+         "must not be adjacent"),
         ({"grid": ["ST#G"], "switches": [{"pos": [0, 1], "targets": [[0, 2], [0, 0]], "effect": "open"}]},
          "unknown key"),
         ({"grid": ["SO-G"], "switches": [{"pos": [0, 1], "effect": "open", "bridges": [[0, 2]]},
@@ -80,6 +84,11 @@ def test_name_defaults_to_file_stem(tmp_path):
 def test_malformed_levels_are_rejected(data, message):
     with pytest.raises(LevelFormatError, match=re.escape(message)):
         parse_level(data)
+
+
+def test_diagonal_split_targets_are_allowed():
+    level = parse_level({"grid": ["ST#", "##G"], "switches": [{"pos": [0, 1], "targets": [[0, 2], [1, 1]]}]})
+    assert level.switches[(0, 1)].targets == ((0, 2), (1, 1))
 
 
 def test_invalid_json_is_reported(tmp_path):
