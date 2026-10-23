@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import heapq
-import time
-import tracemalloc
 from itertools import count
 
 from bloxorz.core import Action, BloxorzProblem, State
 
 from .cost import CostFunction, physics_cost
-from .metrics import SearchMetrics
+from .metrics import MetricsTracker, SearchResult
 
 
 def _reconstruct_path(parent: dict[State, tuple[State, Action] | None], goal_state: State) -> list[Action]:
@@ -27,82 +25,66 @@ def _reconstruct_path(parent: dict[State, tuple[State, Action] | None], goal_sta
     return path
 
 
-def _ucs_search(problem: BloxorzProblem, cost_fn: CostFunction) -> tuple[list[Action] | None, int]:
-    """Core Uniform-Cost Search algorithm.
+def solve_ucs(problem: BloxorzProblem, cost_fn: CostFunction = physics_cost, trace_memory: bool = True) -> SearchResult:
+    """Solve a Bloxorz problem using Uniform-Cost Search (UCS) and record performance metrics.
 
-    Finds the optimal path with minimum cumulative cost.
-    Returns:
-        (solution_path, expanded_nodes)
-    """
-    start_state = problem.initial_state
-
-    # 1. Frontier (Priority Queue) stores: (g_cost, tie_breaker, state)
-    tie_breaker = count()
-    frontier: list[tuple[float, int, State]] = [(0.0, next(tie_breaker), start_state)]
-
-    # 2. Tracking structures
-    best_cost: dict[State, float] = {start_state: 0.0}
-    parent: dict[State, tuple[State, Action] | None] = {start_state: None}
-    expanded_nodes = 0
-
-    # 3. Main search loop
-    while frontier:
-        current_cost, _, current_state = heapq.heappop(frontier)
-
-        # Lazy deletion: skip if a cheaper path to this state was already found
-        if current_cost > best_cost.get(current_state, float("inf")):
-            continue
-
-        # Goal test on pop (guarantees optimal solution cost in UCS)
-        if problem.is_goal(current_state):
-            path = _reconstruct_path(parent, current_state)
-            return path, expanded_nodes
-
-        # A node is expanded when popped and its successors are generated
-        expanded_nodes += 1
-        for action, next_state in problem.successors(current_state):
-            step_cost = cost_fn(current_state, action, next_state)
-            new_cost = current_cost + step_cost
-
-            if new_cost < best_cost.get(next_state, float("inf")):
-                best_cost[next_state] = new_cost
-                parent[next_state] = (current_state, action)
-                heapq.heappush(frontier, (new_cost, next(tie_breaker), next_state))
-
-    return None, expanded_nodes
-
-
-def solve_ucs(problem: BloxorzProblem, cost_fn: CostFunction = physics_cost) -> tuple[list[Action] | None, SearchMetrics]:
-    """Solve a Bloxorz problem using UCS and record performance metrics.
+    Algorithm characteristics:
+    - **Optimality**: UCS expands nodes in order of cumulative path cost g(n).
+      By performing the goal test when a node is *popped* from the priority queue,
+      it is mathematically guaranteed to return the optimal (lowest cost) path.
+    - **Priority Queue**: Uses Python's ``heapq`` storing ``(g_cost, tie_breaker, state)``.
+    - **Duplicate Handling**: Employs lazy deletion; if a popped state has a cost strictly
+      greater than its best recorded cost in ``best_cost``, it is discarded.
+    - **Metrics Tracking**: Managed via ``MetricsTracker`` to uniformly capture execution
+      time, peak memory (tracemalloc), expanded nodes, and solution path length.
 
     Args:
-        problem: The BloxorzProblem to solve.
-        cost_fn: Step cost function (defaults to physics_cost).
+        problem: The BloxorzProblem instance to solve.
+        cost_fn: Step cost function c(s, a, s') (defaults to physics_cost).
+        trace_memory: Whether to track peak memory using tracemalloc (default: True).
 
     Returns:
-        (solution_path, metrics)
+        SearchResult containing the optimal path and search metrics.
     """
-    tracing_already = tracemalloc.is_tracing()
-    if not tracing_already:
-        tracemalloc.start()
-    tracemalloc.reset_peak()
-    start_time = time.perf_counter()
+    with MetricsTracker(trace_memory=trace_memory) as tracker:
+        start_state = problem.initial_state
 
-    path, expanded_nodes = _ucs_search(problem, cost_fn)
+        if problem.is_goal(start_state):
+            return tracker.make_result([])
 
-    search_time = time.perf_counter() - start_time
-    _, peak_memory = tracemalloc.get_traced_memory()
-    if not tracing_already:
-        tracemalloc.stop()
+        # 1. Frontier (Priority Queue) stores: (g_cost, tie_breaker, state)
+        tie_breaker = count()
+        frontier: list[tuple[float, int, State]] = [(0.0, next(tie_breaker), start_state)]
 
-    metrics = SearchMetrics(
-        search_time=search_time,
-        peak_memory=peak_memory,
-        expanded_nodes=expanded_nodes,
-        solution_length=len(path) if path is not None else 0,
-    )
+        # 2. Tracking structures
+        best_cost: dict[State, float] = {start_state: 0.0}
+        parent: dict[State, tuple[State, Action] | None] = {start_state: None}
 
-    return path, metrics
+        # 3. Main search loop
+        while frontier:
+            current_cost, _, current_state = heapq.heappop(frontier)
+
+            # Lazy deletion: skip if a cheaper path to this state was already found
+            if current_cost > best_cost.get(current_state, float("inf")):
+                continue
+
+            # Goal test on pop (guarantees optimal solution cost in UCS)
+            if problem.is_goal(current_state):
+                path = _reconstruct_path(parent, current_state)
+                return tracker.make_result(path)
+
+            # A node is expanded when popped and its successors are generated
+            tracker.count_expansion()
+            for action, next_state in problem.successors(current_state):
+                step_cost = cost_fn(current_state, action, next_state)
+                new_cost = current_cost + step_cost
+
+                if new_cost < best_cost.get(next_state, float("inf")):
+                    best_cost[next_state] = new_cost
+                    parent[next_state] = (current_state, action)
+                    heapq.heappush(frontier, (new_cost, next(tie_breaker), next_state))
+
+        return tracker.make_result(None)
 
 
 # Convenient alias
