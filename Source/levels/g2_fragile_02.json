@@ -1,14 +1,14 @@
 {
-  "name": "Level 2.2 - Ice Floe Archipelago",
+  "name": "Level 2.2 - Shattered Labyrinth",
   "grid": [
-    "###..FFFF#..",
-    "#S##FFFF##..",
-    "####FF..FF..",
-    "....FF..FF..",
-    "..####..#FF#",
-    "..#FFFFF#FG#",
-    "..#FFFFF###.",
-    "..###......."
+    "..###..####.",
+    "##S#FFFF..#.",
+    "###FFFFF.##.",
+    "#..FFFFF..##",
+    "###..#..#FF#",
+    "..####..#FG#",
+    "..#FF####F#.",
+    "..####..###."
   ],
   "switches": []
 }
