@@ -110,10 +110,11 @@ def test_switch_action_swaps_controlled_cube():
         p.result(p.initial_state, Action.SWITCH)
 
 
-def test_switch_effects_are_pending_until_tiles_are_implemented():
+def test_switch_effect_toggles_linked_bridge():
     p = problem("SO#G-", switches=[{"pos": [0, 1], "effect": "toggle", "bridges": [[0, 4]]}])
-    with pytest.raises(NotImplementedError):
-        p.result(p.initial_state, Action.RIGHT)
+    nxt = p.result(p.initial_state, Action.RIGHT)
+    assert nxt == State(Block(0, 1, H), None, 0b1)
+
 
 
 def test_replay_reports_the_falling_action():

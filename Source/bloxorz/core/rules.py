@@ -8,7 +8,7 @@ The search-facing interface (``BloxorzProblem``) calls only ``is_legal`` and
 from __future__ import annotations
 
 from .geometry import Cell
-from .level import Level, Switch, SwitchKind, Tile
+from .level import BridgeEffect, Level, Switch, SwitchKind, Tile
 from .state import State
 
 
@@ -29,8 +29,7 @@ def is_legal(level: Level, state: State) -> bool:
     # A standing block puts all its weight on one tile and breaks a fragile one.
     if state.is_standing and level.tile(state.block.cells()[0]) is Tile.FRAGILE:
         return False
-    # TODO(Long): decide whether a single cube may rest on a fragile tile
-    # (in the original game it may) and enforce it here if not.
+    # A single cube may rest safely on a fragile tile (docs/SPECIAL_TILES.md, 3.1).
     return True
 
 
@@ -39,9 +38,13 @@ def pressed_switches(level: Level, state: State) -> list[Switch]:
 
     Soft switches fire under any part of the block or under a cube; heavy and
     split switches fire only under the whole block standing upright.
+
+    In split mode, only the cube that just moved (cubes[0]) triggers switches
+    (docs/SPECIAL_TILES.md, 4.2).
     """
     pressed = []
-    for cell in state.cells():
+    cells = (state.cubes[0],) if state.is_split else state.cells()
+    for cell in cells:
         switch = level.switches.get(cell)
         if switch is None:
             continue
@@ -50,22 +53,33 @@ def pressed_switches(level: Level, state: State) -> list[Switch]:
     return pressed
 
 
-def apply_effects(level: Level, state: State) -> State:
-    """Return the state after the tiles under the landed block react.
+def apply_effects(level: Level, state: State) -> State | None:
+    """Return the state after the tiles under the landed block react, or None if the block falls.
 
     Called after every legal move (not after a SWITCH action). Must return a
-    new ``State``; never mutate ``level``.
-
-    TODO(Long): implement
-      - soft/heavy switches: update ``state.bridges`` with ``switch.bridge_mask``
-        according to ``switch.effect`` (toggle / open / close);
-      - split switch: replace the block with two cubes at ``switch.targets``;
-      - merge: two cubes on adjacent cells become one lying block;
-      - decide and document: what happens if a switch closes the bridge the
-        block is resting on.
+    new ``State`` or ``None``; never mutate ``level``.
     """
-    if pressed_switches(level, state):
-        raise NotImplementedError("switch effects are not implemented yet (owner: Long)")
+    bridges = state.bridges
+    for switch in pressed_switches(level, state):
+        if switch.kind in (SwitchKind.SOFT, SwitchKind.HEAVY):
+            if switch.effect is BridgeEffect.TOGGLE:
+                bridges ^= switch.bridge_mask
+            elif switch.effect is BridgeEffect.OPEN:
+                bridges |= switch.bridge_mask
+            elif switch.effect is BridgeEffect.CLOSE:
+                bridges &= ~switch.bridge_mask
+        elif switch.kind is SwitchKind.SPLIT:
+            raise NotImplementedError("split switch is implemented in the next milestone (owner: Long)")
+
+    # If a switch closes the bridge the block is resting on, the block loses support
+    # and falls into the void (docs/SPECIAL_TILES.md, 4.1).
+    if not all(is_passable(level, cell, bridges) for cell in state.cells()):
+        return None
+
     if state.is_split:
         raise NotImplementedError("cube merging is not implemented yet (owner: Long)")
-    return state
+
+    if bridges == state.bridges:
+        return state
+    return State(state.block, state.cubes, bridges)
+
