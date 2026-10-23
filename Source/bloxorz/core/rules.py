@@ -7,7 +7,7 @@ The search-facing interface (``BloxorzProblem``) calls only ``is_legal`` and
 
 from __future__ import annotations
 
-from .geometry import Cell
+from .geometry import Block, Cell, Orientation
 from .level import BridgeEffect, Level, Switch, SwitchKind, Tile
 from .state import State
 
@@ -22,8 +22,31 @@ def is_passable(level: Level, cell: Cell, bridges: int) -> bool:
     return True
 
 
+def try_merge(c1: Cell, c2: Cell) -> Block | None:
+    """Merge two adjacent 1x1x1 cubes into a lying 1x1x2 block if Manhattan distance is 1.
+
+    Returns the merged Block (HORIZONTAL or VERTICAL), or None if not adjacent.
+    (docs/SPECIAL_TILES.md, 4.4).
+    """
+    r1, c1_col = c1
+    r2, c2_col = c2
+    dr = abs(r1 - r2)
+    dc = abs(c1_col - c2_col)
+    if dr + dc != 1:
+        return None
+    if dr == 0:  # Same row, adjacent columns -> HORIZONTAL
+        return Block(r1, min(c1_col, c2_col), Orientation.HORIZONTAL)
+    # dr == 1, dc == 0: Same column, adjacent rows -> VERTICAL
+    return Block(min(r1, r2), c1_col, Orientation.VERTICAL)
+
+
 def is_legal(level: Level, state: State) -> bool:
     """Whether the block (or both cubes) can rest where ``state`` puts them."""
+    # Two cubes cannot physically occupy the exact same cell (docs/SPECIAL_TILES.md, 4.5).
+    if state.is_split:
+        assert state.cubes is not None
+        if state.cubes[0] == state.cubes[1]:
+            return False
     if not all(is_passable(level, cell, state.bridges) for cell in state.cells()):
         return False
     # A standing block puts all its weight on one tile and breaks a fragile one.
@@ -69,15 +92,43 @@ def apply_effects(level: Level, state: State) -> State | None:
             elif switch.effect is BridgeEffect.CLOSE:
                 bridges &= ~switch.bridge_mask
         elif switch.kind is SwitchKind.SPLIT:
-            raise NotImplementedError("split switch is implemented in the next milestone (owner: Long)")
+            # Block standing on a split switch teleports and splits into two cubes (spec 2.5).
+            assert switch.targets is not None
+            t1, t2 = switch.targets
+
+            # Edge Case 10: target on closed bridge or void -> falls into void
+            if not (is_passable(level, t1, bridges) and is_passable(level, t2, bridges)):
+                return None
+
+            # Edge Case 9: cube landing on a soft switch activates it immediately
+            for target in (t1, t2):
+                target_sw = level.switches.get(target)
+                if target_sw is not None and target_sw.kind is SwitchKind.SOFT:
+                    if target_sw.effect is BridgeEffect.TOGGLE:
+                        bridges ^= target_sw.bridge_mask
+                    elif target_sw.effect is BridgeEffect.OPEN:
+                        bridges |= target_sw.bridge_mask
+                    elif target_sw.effect is BridgeEffect.CLOSE:
+                        bridges &= ~target_sw.bridge_mask
+
+            # Verify both cubes still have support after switch effects
+            if not (is_passable(level, t1, bridges) and is_passable(level, t2, bridges)):
+                return None
+
+            # targets[0] receives control first (docs/SPECIAL_TILES.md, 3.5)
+            return State(None, (t1, t2), bridges)
 
     # If a switch closes the bridge the block is resting on, the block loses support
     # and falls into the void (docs/SPECIAL_TILES.md, 4.1).
     if not all(is_passable(level, cell, bridges) for cell in state.cells()):
         return None
 
+    # Handle cube merging when two cubes are adjacent (docs/SPECIAL_TILES.md, 4.4)
     if state.is_split:
-        raise NotImplementedError("cube merging is not implemented yet (owner: Long)")
+        assert state.cubes is not None
+        merged = try_merge(state.cubes[0], state.cubes[1])
+        if merged is not None:
+            return State(merged, None, bridges)
 
     if bridges == state.bridges:
         return state

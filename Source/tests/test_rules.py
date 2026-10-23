@@ -264,3 +264,189 @@ def test_apply_effects_returns_same_state_when_bridges_unchanged():
     landed = State(Block(0, 1, H), None, 0)
     assert rules.apply_effects(p.level, landed) is landed
 
+
+# ---------------------------------------------------------------------------
+# Split Switch & Splitting (docs/SPECIAL_TILES.md, Section 3.5)
+# ---------------------------------------------------------------------------
+
+
+def test_split_switch_activates_only_when_standing():
+    """Standing on a split switch teleports and splits the block into two 1x1x1 cubes."""
+    p = make_problem(
+        "S##T.....",
+        "....#.#..",
+        "....##G..",
+        switches=[{"pos": [0, 3], "targets": [[1, 4], [1, 6]]}],
+    )
+    # Roll R -> H on (0, 1) and (0, 2)
+    s1 = p.result(p.initial_state, Action.RIGHT)
+    assert s1 is not None and not s1.is_split
+    # Roll R -> S standing on (0, 3) (tile T)
+    s2 = p.result(s1, Action.RIGHT)
+    assert s2 is not None
+    assert s2.is_split
+    assert s2.block is None
+    assert s2.cubes == ((1, 4), (1, 6))
+
+
+def test_split_switch_not_activated_when_lying():
+    """Lying across a split switch does not activate it."""
+    p = make_problem(
+        "ST###G...",
+        "....#.#..",
+        switches=[{"pos": [0, 1], "targets": [[1, 4], [1, 6]]}],
+    )
+    lying = p.result(p.initial_state, Action.RIGHT)
+    assert lying is not None
+    assert not lying.is_split
+    assert lying.block == Block(0, 1, H)
+
+
+def test_split_switch_target_on_closed_bridge_causes_fall():
+    """If a split switch teleports a cube onto a closed bridge, it falls (Edge Case 10)."""
+    p = make_problem(
+        "S##T...-.",
+        "....#.#.G",
+        switches=[
+            {"pos": [0, 3], "targets": [[0, 7], [1, 6]]},
+        ],
+    )
+    s1 = p.result(p.initial_state, Action.RIGHT)
+    assert s1 is not None
+    # Standing on T teleports cube 0 to closed bridge [0, 7] -> fall -> None!
+    s2 = p.result(s1, Action.RIGHT)
+    assert s2 is None
+
+
+def test_split_switch_target_on_soft_switch_triggers():
+    """Landing on a soft switch during teleport immediately activates it (Edge Case 9)."""
+    p = make_problem(
+        "S##T...O-",
+        "....#.#.G",
+        switches=[
+            {"pos": [0, 3], "targets": [[0, 7], [1, 6]]},
+            {"pos": [0, 7], "effect": "open", "bridges": [[0, 8]]},
+        ],
+    )
+    s1 = p.result(p.initial_state, Action.RIGHT)
+    assert s1 is not None
+    assert not s1.bridge_open(0)
+    # Teleport cube 0 to (0, 7) which is soft switch O -> opens bridge [0, 8]
+    s2 = p.result(s1, Action.RIGHT)
+    assert s2 is not None
+    assert s2.is_split
+    assert s2.bridge_open(0)
+
+
+# ---------------------------------------------------------------------------
+# Cube Merging (docs/SPECIAL_TILES.md, Section 4.4)
+# ---------------------------------------------------------------------------
+
+
+def test_cubes_merge_horizontally_when_adjacent():
+    """Two cubes moving adjacent along the same row merge into HORIZONTAL block."""
+    p = make_problem("S##G")
+    # Cube 0 at (0, 1), Cube 1 at (0, 3)
+    split_state = State(None, ((0, 1), (0, 3)), 0)
+    # Move cube 0 RIGHT -> lands at (0, 2), adjacent to cube 1 at (0, 3)
+    nxt = p.result(split_state, Action.RIGHT)
+    assert nxt is not None
+    assert not nxt.is_split
+    assert nxt.block == Block(0, 2, H)
+
+
+def test_cubes_merge_vertically_when_adjacent():
+    """Two cubes moving adjacent along the same column merge into VERTICAL block."""
+    p = make_problem(
+        "S#",
+        "##",
+        "##",
+        "G#",
+    )
+    # Cube 0 at (1, 1), Cube 1 at (3, 1)
+    split_state = State(None, ((1, 1), (3, 1)), 0)
+    # Move cube 0 DOWN -> lands at (2, 1), adjacent to cube 1 at (3, 1)
+    nxt = p.result(split_state, Action.DOWN)
+    assert nxt is not None
+    assert not nxt.is_split
+    assert nxt.block == Block(2, 1, V)
+
+
+def test_cubes_do_not_merge_diagonally():
+    """Two diagonally adjacent cubes (Manhattan distance = 2) do not merge."""
+    p = make_problem(
+        "S##",
+        "###",
+        "G##",
+    )
+    state_before = State(None, ((0, 0), (1, 2)), 0)
+    nxt = p.result(state_before, Action.RIGHT)
+    assert nxt is not None
+    assert nxt.is_split  # Still split at diagonal (0, 1) and (1, 2)
+    assert nxt.cubes == ((0, 1), (1, 2))
+
+
+def test_cubes_merge_safely_on_fragile_tile():
+    """Merging on a fragile tile produces a lying block and does not break (Edge Case 8)."""
+    p = make_problem(
+        "S#FG",
+    )
+    # Cube 0 at (0, 3), Cube 1 at (0, 1). Move cube 0 LEFT to (0, 2) [fragile tile F].
+    # Adjacent to (0, 1) -> merges into HORIZONTAL block covering (0, 1) and (0, 2)!
+    split_state = State(None, ((0, 3), (0, 1)), 0)
+    merged = p.result(split_state, Action.LEFT)
+    assert merged is not None
+    assert not merged.is_split
+    assert merged.block == Block(0, 1, H)
+
+
+def test_single_cube_cannot_activate_heavy_or_split_switch():
+    """A single 1x1x1 cube cannot activate heavy (X) or split (T) switches."""
+    p = make_problem(
+        "SX#.T.#.G-",
+        switches=[
+            {"pos": [0, 1], "effect": "toggle", "bridges": [[0, 9]]},
+            {"pos": [0, 4], "targets": [[0, 2], [0, 6]]},
+        ],
+    )
+    # Cube 0 at (0, 0), other at (0, 6). Moves R onto X at (0, 1)
+    cube_on_x = p.result(State(None, ((0, 0), (0, 6)), 0), Action.RIGHT)
+    assert cube_on_x is not None
+    assert not cube_on_x.bridge_open(0)  # X did not trigger!
+
+    # Cube 0 at (0, 3), other at (0, 6). Moves R onto T at (0, 4)
+    cube_on_t = p.result(State(None, ((0, 3), (0, 6)), 0), Action.RIGHT)
+    assert cube_on_t is not None
+    assert cube_on_t.is_split  # T did not split again!
+    assert cube_on_t.cubes == ((0, 4), (0, 6))
+
+
+def test_single_cube_cannot_win_on_goal():
+    """A single cube resting on the goal does not win (spec section 2.5)."""
+    p = make_problem("S##G")
+    state_on_goal = State(None, ((0, 3), (0, 1)), 0)
+    assert not p.is_goal(state_on_goal)
+
+
+def test_two_cubes_cannot_occupy_same_cell():
+    """Two cubes cannot occupy the exact same coordinate (Edge Case 5)."""
+    p = make_problem("S##G")
+    assert not rules.is_legal(p.level, State(None, ((0, 1), (0, 1)), 0))
+
+
+def test_bfs_solves_stage_with_split_and_merge():
+    """Verify that BFS solver can search and find a solution on a level with split & merge."""
+    from bloxorz.solvers import bfs
+
+    p = make_problem(
+        "S##T.....",
+        "....#####",
+        "....####G",
+        switches=[{"pos": [0, 3], "targets": [[1, 4], [1, 7]]}],
+    )
+    path, metrics = bfs(p)
+    assert path is not None
+    assert metrics.solution_length > 0
+    states = replay(p, path)
+    assert p.is_goal(states[-1])
+
