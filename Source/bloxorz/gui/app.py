@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from enum import Enum, auto
 from pathlib import Path
+import queue
 import threading
 import pygame
 
 from bloxorz.core import Action, BloxorzProblem, State, load_level, replay, roll, step
+from bloxorz.solvers import SearchMetrics, astar, bfs, dfs, ucs
 from . import renderer, theme
 from .renderer import MoveTransition
 from .widgets import Button
@@ -35,6 +37,14 @@ KEY_TO_ACTION: dict[int, Action] = {
 
 ROLL_DURATION_MS = 155
 END_EFFECT_DURATION_MS = 320
+
+# Button label -> solver function. All return SearchResult(path, metrics).
+SOLVERS = {
+    "BFS": bfs,
+    "DFS": dfs,
+    "UCS": ucs,
+    "A*": astar,
+}
 
 
 class BloxorzApp:
@@ -87,6 +97,9 @@ class BloxorzApp:
             "Search Time": "-",
             "Peak Memory": "-",
         }
+        # Worker thread -> main thread channel: (kind, algo_name, result).
+        # Only the main thread mutates GUI state.
+        self.solver_results: queue.Queue[tuple[str, str, object]] = queue.Queue()
 
         self.buttons = self._create_buttons()
         self.load_current_level()
@@ -225,21 +238,65 @@ class BloxorzApp:
             self.status_color = theme.ACCENT_COLOR
 
     def run_solver(self, algo_name: str) -> None:
-        """Spawn a background thread to run the selected solver (Phase 2 hook)."""
+        """Run the selected solver on a background thread so the GUI stays responsive."""
         if self.status is GameStatus.SOLVING:
             return
+        # Solvers start from the initial state, so show it. Must run before
+        # setting SOLVING because restart_level() returns early while SOLVING.
+        self.restart_level()
+
         self.status = GameStatus.SOLVING
         self.status_message = f"Solving with {algo_name}..."
         self.status_color = theme.WARNING_COLOR
+        solver = SOLVERS[algo_name]
+        problem = self.problem  # captured locally; the worker never touches self's GUI state
 
         def _worker() -> None:
-            # TODO(Phase 2): Connect to bloxorz.solvers once implemented
-            self.metrics_info["Algorithm"] = algo_name
-            self.status = GameStatus.PLAYING
-            self.status_message = f"{algo_name} solver not connected yet."
-            self.status_color = theme.WARNING_COLOR
+            try:
+                result = solver(problem)
+                self.solver_results.put(("SUCCESS", algo_name, result))
+            except Exception as exc:  # never leave the GUI stuck in SOLVING
+                self.solver_results.put(("ERROR", algo_name, str(exc)))
 
         threading.Thread(target=_worker, daemon=True).start()
+
+    @staticmethod
+    def _format_metrics(algo_name: str, metrics: SearchMetrics) -> dict[str, str]:
+        """Convert SearchMetrics into the sidebar's display strings."""
+        return {
+            "Algorithm": algo_name,
+            "Solution Length": f"{metrics.solution_length}" if metrics.solution_length is not None else "-",
+            "Expanded Nodes": f"{metrics.expanded_nodes}" if metrics.expanded_nodes is not None else "-",
+            "Search Time": f"{metrics.search_time * 1000:.3f} ms" if metrics.search_time is not None else "-",
+            "Peak Memory": f"{metrics.peak_memory / 1024:.3f} KB" if metrics.peak_memory is not None else "-",
+        }
+
+    def _process_solver_results(self) -> None:
+        """Pick up a finished solver result (if any). Called on the main thread every frame."""
+        try:
+            kind, algo_name, result = self.solver_results.get_nowait()
+        except queue.Empty:
+            return  # nothing finished yet this frame
+
+        if kind == "ERROR":
+            self.status = GameStatus.PLAYING
+            self.status_message = f"{algo_name} solver error: {result}"
+            self.status_color = theme.DANGER_COLOR
+            return
+
+        path, metrics = result
+        self.metrics_info = self._format_metrics(algo_name, metrics)
+
+        if path is None:
+            self.status = GameStatus.PLAYING
+            self.status_message = f"{algo_name} solver found no solution."
+            self.status_color = theme.WARNING_COLOR
+        elif not path:
+            self.status = GameStatus.WON
+            self.status_message = f"{algo_name} solver found a trivial solution (0 moves)."
+            self.status_color = theme.SUCCESS_COLOR
+        else:
+            self.start_animation(path, self.metrics_info)
 
     def start_animation(self, actions: list[Action], metrics: dict[str, str]) -> None:
         """Replay a solution path step by step on the 3D board."""
@@ -261,6 +318,9 @@ class BloxorzApp:
             )
 
     def update(self, dt_ms: int) -> None:
+        # 0. Receive results from the solver thread
+        self._process_solver_results()
+
         # 1. Solver solution replay mode
         if self.status is GameStatus.ANIMATING and self.anim_states:
             self.anim_timer_ms += dt_ms
