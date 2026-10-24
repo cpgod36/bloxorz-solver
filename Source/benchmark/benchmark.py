@@ -10,10 +10,12 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime
-import importlib
-import os
-import signal
+import inspect
+import multiprocessing
+import queue
+import statistics
 import sys
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -22,67 +24,111 @@ SOURCE_DIR = Path(__file__).resolve().parent.parent
 if str(SOURCE_DIR) not in sys.path:
     sys.path.insert(0, str(SOURCE_DIR))
 
-from bloxorz.core import BloxorzProblem, format_actions, load_level
-from bloxorz.solvers import SearchResult, bfs, dfs, ids
+from bloxorz.core import BloxorzProblem, format_actions, load_level, replay
+from bloxorz.solvers import SearchResult, bfs, dfs, ids, physics_cost, solve_astar, solve_ucs
 
 # Solver mapping: name -> function
-SOLVERS: dict[str, Callable[[BloxorzProblem], SearchResult]] = {
+SOLVERS: dict[str, Callable[..., SearchResult]] = {
     "BFS": bfs,
     "DFS": dfs,
     "IDS": ids,
+    "UCS": solve_ucs,
+    "A*": solve_astar,
 }
 
-# Dynamically discover UCS and A* if Minh or Cao have implemented them
-for extra_name, module_name, func_name in [
-    ("UCS", "bloxorz.solvers.ucs", "solve_ucs"),
-    ("A*", "bloxorz.solvers.astar", "solve_astar"),
-]:
+# Cost function each solver optimises. BFS/DFS/IDS count moves (unit cost); UCS and A*
+# use the default ``cost_fn`` of their signature, so this stays in sync with the solvers.
+COST_FUNCTION_NAMES: dict[str, str] = {
+    name: (
+        inspect.signature(fn).parameters["cost_fn"].default.__name__
+        if "cost_fn" in inspect.signature(fn).parameters
+        else "unit_moves"
+    )
+    for name, fn in SOLVERS.items()
+}
+
+# Runs shorter than this are repeated and their median time is reported (tiny levels
+# finish in a few ms, so one sample is mostly noise). Slower runs are measured once.
+REPEAT_BELOW_SEC = 1.0
+POLL_INTERVAL_SEC = 0.05
+
+
+def _solver_worker(
+    solver_fn: Callable[..., SearchResult],
+    problem: BloxorzProblem,
+    trace_memory: bool,
+    out: "multiprocessing.Queue[tuple[str, Any]]",
+) -> None:
+    """Child-process entry point: run one solver and send back its result.
+
+    Lives at module level so it can be pickled by the ``spawn`` start method (Windows).
+    """
     try:
-        mod = importlib.import_module(module_name)
-        SOLVERS[extra_name] = getattr(mod, func_name)
-    except (ImportError, AttributeError):
-        pass
-
-
-class BenchmarkTimeoutError(Exception):
-    """Raised when a solver exceeds the timeout limit."""
-
-
-def _alarm_handler(signum: int, frame: Any) -> None:
-    raise BenchmarkTimeoutError("Solver timed out")
+        out.put(("OK", solver_fn(problem, trace_memory=trace_memory)))
+    except Exception as exc:  # report to the parent instead of dying silently
+        out.put(("ERROR", f"{type(exc).__name__}: {exc}"))
 
 
 def run_solver_with_timeout(
-    solver_fn: Callable[[BloxorzProblem], SearchResult],
+    solver_fn: Callable[..., SearchResult],
     problem: BloxorzProblem,
     timeout_sec: float,
+    trace_memory: bool = True,
 ) -> tuple[str, SearchResult | None]:
-    """Execute solver_fn with a timeout limit.
+    """Execute solver_fn in a separate process with a wall-clock timeout.
+
+    A process is used instead of ``signal.SIGALRM`` because SIGALRM does not exist on
+    Windows. On timeout the process is terminated.
 
     Returns:
         (status, SearchResult or None)
-        status is one of "SOLVED", "UNSOLVABLE", "TIMEOUT", "ERROR"
+        status is one of "SOLVED", "UNSOLVABLE", "LIMIT", "TIMEOUT", "ERROR"
     """
-    has_alarm = hasattr(signal, "SIGALRM")
-    if has_alarm and timeout_sec > 0:
-        signal.signal(signal.SIGALRM, _alarm_handler)
-        signal.alarm(int(timeout_sec) if timeout_sec >= 1 else 1)
+    ctx = multiprocessing.get_context()
+    out: multiprocessing.Queue = ctx.Queue()
+    proc = ctx.Process(target=_solver_worker, args=(solver_fn, problem, trace_memory, out))
+    proc.start()
 
+    deadline = time.monotonic() + timeout_sec
+    message: tuple[str, Any] | None = None
     try:
-        result = solver_fn(problem)
-        if result.path is not None:
-            status = "SOLVED"
-        else:
-            status = "UNSOLVABLE"
-        return status, result
-    except BenchmarkTimeoutError:
-        return "TIMEOUT", None
-    except Exception as exc:
-        print(f"    [!] Error during execution: {exc}")
-        return "ERROR", None
+        # Read before join(): a child blocked on a full pipe would never exit.
+        while message is None:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return "TIMEOUT", None
+            try:
+                message = out.get(timeout=min(POLL_INTERVAL_SEC, remaining))
+            except queue.Empty:
+                if not proc.is_alive():
+                    try:
+                        message = out.get(timeout=POLL_INTERVAL_SEC)  # result may be in flight
+                    except queue.Empty:
+                        print(f"    [!] Solver process died (exit code {proc.exitcode})")
+                        return "ERROR", None
     finally:
-        if has_alarm and timeout_sec > 0:
-            signal.alarm(0)
+        if proc.is_alive():
+            proc.terminate()
+        proc.join()
+        out.close()
+
+    kind, payload = message
+    if kind == "ERROR":
+        print(f"    [!] Error during execution: {payload}")
+        return "ERROR", None
+
+    result: SearchResult = payload
+    if result.path is not None:
+        return "SOLVED", result
+    if result.metrics.hit_depth_limit:
+        return "LIMIT", result
+    return "UNSOLVABLE", result
+
+
+def path_cost(problem: BloxorzProblem, path: list) -> float:
+    """Total ``physics_cost`` of a path, so every solver is compared on the same scale."""
+    states = replay(problem, path)
+    return sum(physics_cost(a, act, b) for a, act, b in zip(states, path, states[1:]))
 
 
 def collect_levels(levels_dir: Path) -> list[Path]:
@@ -96,10 +142,45 @@ def collect_levels(levels_dir: Path) -> list[Path]:
     return [lvl for lvl in levels if not lvl.name.startswith(".")]
 
 
+def measure(
+    solver_fn: Callable[..., SearchResult],
+    problem: BloxorzProblem,
+    timeout_sec: float,
+    repeats: int,
+) -> dict[str, Any]:
+    """Measure one (level, solver) pair.
+
+    Time comes from runs with ``trace_memory=False`` (tracemalloc slows a search by
+    about 3x); fast runs are repeated and the median is kept. Peak memory comes from
+    one extra run with ``trace_memory=True``.
+    """
+    status, first = run_solver_with_timeout(solver_fn, problem, timeout_sec, trace_memory=False)
+    if first is None:
+        return {"status": status, "result": None, "time": timeout_sec if status == "TIMEOUT" else 0.0,
+                "peak_memory": None, "repeats": 0}
+
+    times = [first.metrics.search_time]
+    if first.metrics.search_time < REPEAT_BELOW_SEC:
+        for _ in range(repeats - 1):
+            _, again = run_solver_with_timeout(solver_fn, problem, timeout_sec, trace_memory=False)
+            if again is None:
+                break
+            times.append(again.metrics.search_time)
+
+    peak_memory: int | None = None
+    _, traced = run_solver_with_timeout(solver_fn, problem, timeout_sec, trace_memory=True)
+    if traced is not None:
+        peak_memory = traced.metrics.peak_memory
+
+    return {"status": status, "result": first, "time": statistics.median(times),
+            "peak_memory": peak_memory, "repeats": len(times)}
+
+
 def run_benchmark(
     levels: list[Path],
     selected_solvers: list[str],
     timeout_sec: float = 30.0,
+    repeats: int = 3,
 ) -> list[dict[str, Any]]:
     """Run all selected solvers on the given levels and return record list."""
     records: list[dict[str, Any]] = []
@@ -117,46 +198,47 @@ def run_benchmark(
             print(f"Failed to load level {lvl_path.name}: {exc}")
             continue
 
-        print(f"▶ Level: {lvl_path.name} ({lvl.name})")
+        print(f"> Level: {lvl_path.name} ({lvl.name})")
 
         for solver_name in selected_solvers:
-            solver_fn = SOLVERS[solver_name]
             print(f"   [{solver_name:4s}] Running...", end="", flush=True)
 
-            status, res = run_solver_with_timeout(solver_fn, prob, timeout_sec)
+            m = measure(SOLVERS[solver_name], prob, timeout_sec, repeats)
+            status, res = m["status"], m["result"]
+            peak_bytes = m["peak_memory"]
 
             if res is not None:
                 path_str = format_actions(res.path) if res.path is not None else ""
                 sol_len = res.metrics.solution_length
+                sol_cost = path_cost(prob, res.path) if res.path is not None else ""
                 exp_nodes = res.metrics.expanded_nodes
-                time_sec = res.metrics.search_time
-                peak_bytes = res.metrics.peak_memory
-                peak_kb = round(peak_bytes / 1024, 2)
             else:
                 path_str = ""
                 sol_len = 0
+                sol_cost = ""
                 exp_nodes = 0
-                time_sec = timeout_sec if status == "TIMEOUT" else 0.0
-                peak_bytes = 0
-                peak_kb = 0.0
 
             record = {
                 "timestamp": now_iso,
                 "level_file": lvl_path.name,
                 "level_name": lvl.name,
                 "algorithm": solver_name,
+                "cost_function": COST_FUNCTION_NAMES[solver_name],
                 "status": status,
                 "solution_length": sol_len,
+                "solution_cost": sol_cost,
                 "expanded_nodes": exp_nodes,
-                "search_time_sec": round(time_sec, 6),
-                "peak_memory_bytes": peak_bytes,
-                "peak_memory_kb": peak_kb,
+                "search_time_sec": round(m["time"], 6),
+                "time_repeats": m["repeats"],
+                "peak_memory_bytes": "" if peak_bytes is None else peak_bytes,
+                "peak_memory_kb": "" if peak_bytes is None else round(peak_bytes / 1024, 2),
                 "actions": path_str,
             }
             records.append(record)
 
             if status == "SOLVED":
-                print(f" Done in {time_sec*1000:.2f}ms | Length: {sol_len:2d} | Expanded: {exp_nodes:5d} | RAM: {peak_kb:7.1f} KB")
+                ram = "n/a" if peak_bytes is None else f"{peak_bytes / 1024:7.1f} KB"
+                print(f" Done in {m['time']*1000:.2f}ms | Length: {sol_len:3d} | Expanded: {exp_nodes:7d} | RAM: {ram}")
             else:
                 print(f" {status}")
 
@@ -165,27 +247,32 @@ def run_benchmark(
     return records
 
 
+CSV_FIELDS = [
+    "timestamp",
+    "level_file",
+    "level_name",
+    "algorithm",
+    "cost_function",
+    "status",
+    "solution_length",
+    "solution_cost",
+    "expanded_nodes",
+    "search_time_sec",
+    "time_repeats",
+    "peak_memory_bytes",
+    "peak_memory_kb",
+    "actions",
+]
+
+
 def export_csv(records: list[dict[str, Any]], output_path: Path) -> None:
     """Save benchmark records to a CSV file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = [
-        "timestamp",
-        "level_file",
-        "level_name",
-        "algorithm",
-        "status",
-        "solution_length",
-        "expanded_nodes",
-        "search_time_sec",
-        "peak_memory_bytes",
-        "peak_memory_kb",
-        "actions",
-    ]
     with open(output_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=CSV_FIELDS, restval="")
         writer.writeheader()
         writer.writerows(records)
-    print(f"✓ Benchmark results saved to: {output_path}")
+    print(f"[OK] Benchmark results saved to: {output_path}")
 
 
 def print_summary_table(records: list[dict[str, Any]]) -> None:
@@ -193,7 +280,10 @@ def print_summary_table(records: list[dict[str, Any]]) -> None:
     if not records:
         return
 
-    header = f"{'Level':<20} | {'Algorithm':<6} | {'Status':<10} | {'Moves':<5} | {'Expanded':<8} | {'Time (ms)':<10} | {'Peak RAM':<10}"
+    header = (
+        f"{'Level':<20} | {'Algo':<4} | {'Status':<10} | {'Moves':<5} | {'Cost':<6} | "
+        f"{'Expanded':<8} | {'Time (ms)':<10} | {'Peak RAM':<10}"
+    )
     sep = "-" * len(header)
     print(sep)
     print(header)
@@ -201,12 +291,13 @@ def print_summary_table(records: list[dict[str, Any]]) -> None:
 
     for r in records:
         time_ms = f"{r['search_time_sec']*1000:.2f}"
-        ram_str = f"{r['peak_memory_kb']:.1f} KB"
+        ram_str = "n/a" if r["peak_memory_kb"] == "" else f"{r['peak_memory_kb']:.1f} KB"
         print(
             f"{r['level_file'][:20]:<20} | "
-            f"{r['algorithm']:<6} | "
+            f"{r['algorithm']:<4} | "
             f"{r['status']:<10} | "
             f"{r['solution_length']:<5} | "
+            f"{r['solution_cost']:<6} | "
             f"{r['expanded_nodes']:<8} | "
             f"{time_ms:<10} | "
             f"{ram_str:<10}"
@@ -250,7 +341,8 @@ def plot_charts(records: list[dict[str, Any]], output_dir: Path) -> None:
             values = []
             for lvl in levels:
                 match = [r for r in solved if r["level_file"] == lvl and r["algorithm"] == algo]
-                values.append(match[0][metric_key] if match else 0)
+                value = match[0][metric_key] if match else ""
+                values.append(float("nan") if value == "" else value)
             ax.bar(x + idx * bar_width, values, bar_width, label=algo)
 
         ax.set_title(title, fontsize=14, fontweight="bold")
@@ -267,26 +359,29 @@ def plot_charts(records: list[dict[str, Any]], output_dir: Path) -> None:
         chart_path = output_dir / filename
         plt.savefig(chart_path, dpi=150)
         plt.close(fig)
-        print(f"✓ Chart generated: {chart_path}")
+        print(f"[OK] Chart generated: {chart_path}")
 
     # Generate charts for the 4 core metrics
     make_grouped_bar_chart(
         "search_time_sec",
         "Search Time by Algorithm",
-        "Time (seconds)",
+        "Time (seconds, log scale)",
         "chart_search_time.png",
+        log_scale=True,
     )
     make_grouped_bar_chart(
         "peak_memory_kb",
         "Peak Memory by Algorithm",
-        "Peak Memory (KB)",
+        "Peak Memory (KB, log scale)",
         "chart_peak_memory.png",
+        log_scale=True,
     )
     make_grouped_bar_chart(
         "expanded_nodes",
         "Expanded Nodes by Algorithm",
-        "Expanded Nodes Count",
+        "Expanded Nodes Count (log scale)",
         "chart_expanded_nodes.png",
+        log_scale=True,
     )
     make_grouped_bar_chart(
         "solution_length",
@@ -297,6 +392,9 @@ def plot_charts(records: list[dict[str, Any]], output_dir: Path) -> None:
 
 
 def main() -> None:
+    # Windows consoles default to a legacy codepage; never crash on printing.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="Bloxorz Search Algorithm Benchmark Runner")
     parser.add_argument(
         "--levels-dir",
@@ -321,6 +419,12 @@ def main() -> None:
         type=float,
         default=30.0,
         help="Timeout in seconds per solver run (default: 30.0)",
+    )
+    parser.add_argument(
+        "--repeats",
+        type=int,
+        default=3,
+        help=f"Timing runs per fast (<{REPEAT_BELOW_SEC:g}s) solver; the median is reported (default: 3)",
     )
     parser.add_argument(
         "--plot",
@@ -362,7 +466,7 @@ def main() -> None:
         output_csv = args.output
 
     # Run benchmark
-    records = run_benchmark(levels, selected_solvers, timeout_sec=args.timeout)
+    records = run_benchmark(levels, selected_solvers, timeout_sec=args.timeout, repeats=max(1, args.repeats))
 
     # Output results
     print_summary_table(records)

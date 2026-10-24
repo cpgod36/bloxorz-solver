@@ -50,7 +50,7 @@ problem.is_goal(state)
 - **Công tắc soft/heavy** có hai trường:
   - `effect`: `toggle` (lật trạng thái), `open` hoặc `close` (cố định trạng thái).
   - `bridges`: danh sách ô cầu mà công tắc điều khiển.
-- **Công tắc split** có trường `targets`: 2 ô nơi hai khối lập phương xuất hiện.
+- **Công tắc split** có trường `targets`: 2 ô nơi hai khối lập phương xuất hiện. Hai ô phải khác nhau, không phải void và **không được kề cạnh nhau** (nếu kề nhau thì hai khối sẽ ghép lại ngay; xem `docs/SPECIAL_TILES.md`, mục 4.10). Kề chéo thì được.
 - Loại công tắc lấy theo ký tự trong `grid`, nên trong `switches` không cần ghi lại loại.
 - File sai định dạng sẽ báo lỗi `LevelFormatError` kèm vị trí cụ thể.
 
@@ -164,4 +164,4 @@ cd Source
 python -m pytest          # pytest.ini đã cấu hình sẵn đường dẫn
 ```
 
-Các file test: `tests/test_geometry.py` (đủ 12 ô của bảng chuyển tư thế, lăn ngược thì về vị trí cũ), `tests/test_level.py` (bộ đọc màn và 15 trường hợp file lỗi), `tests/test_problem.py` (rơi, thắng, ô dễ vỡ, cầu, `SWITCH`, `replay`).
+Các file test: `tests/test_geometry.py` (đủ 12 ô của bảng chuyển tư thế, lăn ngược thì về vị trí cũ), `tests/test_level.py` (bộ đọc màn và 17 trường hợp file lỗi), `tests/test_problem.py` (rơi, thắng, ô dễ vỡ, cầu, `SWITCH`, `replay`).

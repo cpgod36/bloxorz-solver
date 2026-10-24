@@ -206,6 +206,9 @@ def _parse_switches(
             t2 = _cell(targets[1], f"{where}.targets[1]")
             if t1 == t2:
                 raise LevelFormatError(f"{where}.targets must be two different cells")
+            # Adjacent cubes would merge right after splitting (docs/SPECIAL_TILES.md, 4.10).
+            if abs(t1[0] - t2[0]) + abs(t1[1] - t2[1]) == 1:
+                raise LevelFormatError(f"{where}.targets {t1} and {t2} must not be adjacent")
             for t in (t1, t2):
                 if level.tile(t) is Tile.VOID:
                     raise LevelFormatError(f"{where}: target {t} is void or off the board")

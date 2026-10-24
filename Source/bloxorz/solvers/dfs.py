@@ -110,15 +110,25 @@ def ids(
     """Solve the Bloxorz problem using Iterative Deepening Search (IDS).
 
     Repeatedly applies Depth-Limited Search (DLS) with increasing depth limits
-    (0, 1, 2, ..., max_depth). Combines the linear space complexity of DFS with the
-    optimality and completeness of BFS (since all move costs are uniform).
+    (0, 1, 2, ..., max_depth). Finds the shortest move sequence, like BFS, because all
+    moves count the same when measuring depth.
 
     Algorithm characteristics:
-    - **Optimality**: Finds the shortest move sequence (minimum solution length).
+    - **Optimality**: Finds the minimum number of moves (not the minimum physics cost).
     - **Explicit Stack**: Each DLS pass uses an explicit stack, avoiding recursion.
     - **Cycle Detection**: Tracks the minimum depth at which each state was reached
       within the current depth limit iteration. If a state is encountered at a depth
       greater than or equal to its previously recorded depth in this iteration, it is pruned.
+    - **Memory**: NOT linear. The ``reached`` and ``parent`` dicts hold every state seen in
+      one pass, so memory is O(number of states reached within the limit), the same order
+      as BFS (and in practice a bit more, since each state may be stored with a smaller
+      depth later). The trade-off versus plain IDS on the current path only: far fewer
+      expanded nodes, at the cost of keeping that table.
+    - **Time**: States are re-expanded in every pass, so total expansions are much higher
+      than BFS.
+    - **Stopping**: Returns ``None`` with ``hit_depth_limit=False`` when a pass never reaches
+      its depth limit (the whole reachable space was explored: unsolvable). Returns ``None``
+      with ``hit_depth_limit=True`` when ``max_depth`` is exhausted without a proof.
     - **Total Metrics**: Accurately aggregates total search time, peak memory, and total
       node expansions across all depth limit iterations.
 
@@ -129,8 +139,9 @@ def ids(
 
     Returns:
         A SearchResult tuple: ``(path, metrics)``.
-        - ``path``: List of Actions to solve the stage, or ``None`` if unsolvable.
-        - ``metrics``: SearchMetrics with time, peak memory, expanded nodes, and path length.
+        - ``path``: List of Actions to solve the stage, or ``None`` if no solution was found.
+        - ``metrics``: SearchMetrics with time, peak memory, expanded nodes, path length,
+          and ``hit_depth_limit``.
     """
     with MetricsTracker(trace_memory=trace_memory) as tracker:
         initial = problem.initial_state
@@ -144,6 +155,7 @@ def ids(
             parent: dict[State, tuple[State, Action] | None] = {initial: None}
             # reached: state -> minimum depth reached in this iteration
             reached: dict[State, int] = {initial: 0}
+            cut_off = False
 
             while stack:
                 state, depth = stack.pop()
@@ -152,7 +164,10 @@ def ids(
                     path = _reconstruct_path(parent, state)
                     return tracker.make_result(path)
 
-                if depth < limit:
+                if depth >= limit:
+                    # A non-goal state sits at the limit; deeper states may exist.
+                    cut_off = True
+                else:
                     tracker.count_expansion()
 
                     for action, next_state in reversed(problem.successors(state)):
@@ -162,7 +177,11 @@ def ids(
                             parent[next_state] = (state, action)
                             stack.append((next_state, next_depth))
 
-        return tracker.make_result(None)
+            if not cut_off:
+                # Nothing was pruned by the limit: the whole reachable space was explored.
+                return tracker.make_result(None)
+
+        return tracker.make_result(None, hit_depth_limit=True)
 
 
 solve_dfs = dfs

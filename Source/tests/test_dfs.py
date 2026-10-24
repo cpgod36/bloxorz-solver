@@ -191,3 +191,25 @@ def test_ids_with_trace_memory_false():
     assert res.path is not None
     assert len(res.path) == 7
     assert res.metrics.peak_memory == 0
+
+
+def test_ids_proves_unsolvable_without_hitting_limit():
+    """A closed space is exhausted: no solution, and no depth limit was involved."""
+    p = make_problem("S.", "..", ".G")  # the standing block cannot reach G
+    path, metrics = ids(p)
+    assert path is None
+    assert metrics.hit_depth_limit is False
+
+
+def test_ids_reports_depth_limit_when_capped():
+    p = BloxorzProblem(load_level(FIXTURES / "classic_01.json"))
+    path, metrics = ids(p, max_depth=3)
+    assert path is None
+    assert metrics.hit_depth_limit is True
+
+
+def test_ids_solution_does_not_set_depth_limit_flag():
+    p = BloxorzProblem(load_level(FIXTURES / "classic_01.json"))
+    path, metrics = ids(p)
+    assert path is not None
+    assert metrics.hit_depth_limit is False

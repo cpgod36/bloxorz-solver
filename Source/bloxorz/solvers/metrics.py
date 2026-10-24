@@ -29,12 +29,15 @@ class SearchMetrics:
             were generated. Solvers must increment this synchronously on each node pop.
         solution_length: Number of actions/moves in the returned path. If no solution
             exists (unsolvable), this defaults to 0.
+        hit_depth_limit: True when a depth-bounded solver (IDS) gave up because it
+            reached its depth limit, so "no path" does not prove the level unsolvable.
     """
 
     search_time: float
     peak_memory: int
     expanded_nodes: int
     solution_length: int
+    hit_depth_limit: bool = False
 
 
 class SearchResult(NamedTuple):
@@ -109,11 +112,12 @@ class MetricsTracker:
         """
         self.expanded_nodes += 1
 
-    def make_metrics(self, path: list[Action] | None) -> SearchMetrics:
+    def make_metrics(self, path: list[Action] | None, hit_depth_limit: bool = False) -> SearchMetrics:
         """Compute and return the final SearchMetrics object.
 
         Args:
             path: The list of actions reaching the goal, or None if unsolvable.
+            hit_depth_limit: True if the search stopped at a depth limit without a proof.
 
         Returns:
             A populated, immutable SearchMetrics instance.
@@ -130,15 +134,17 @@ class MetricsTracker:
             peak_memory=peak_memory,
             expanded_nodes=self.expanded_nodes,
             solution_length=len(path) if path is not None else 0,
+            hit_depth_limit=hit_depth_limit,
         )
 
-    def make_result(self, path: list[Action] | None) -> SearchResult:
+    def make_result(self, path: list[Action] | None, hit_depth_limit: bool = False) -> SearchResult:
         """Package the solution path and computed metrics into a SearchResult.
 
         Args:
             path: The list of actions reaching the goal, or None if unsolvable.
+            hit_depth_limit: True if the search stopped at a depth limit without a proof.
 
         Returns:
             A SearchResult namedtuple containing (path, metrics).
         """
-        return SearchResult(path=path, metrics=self.make_metrics(path))
+        return SearchResult(path=path, metrics=self.make_metrics(path, hit_depth_limit))
