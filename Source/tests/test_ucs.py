@@ -82,12 +82,15 @@ def test_ucs_unit_cost_vs_physics_cost():
     assert cost_of_phys_path < cost_of_unit_path
 
 
-@pytest.mark.parametrize("level_file", sorted(LEVELS_DIR.glob("g1_basic_*.json")))
-def test_all_g1_basic_levels_are_solvable(level_file: Path):
+@pytest.mark.parametrize("level_file", sorted(LEVELS_DIR.glob("g*.json")))
+def test_all_committed_levels_are_solvable_by_ucs(level_file: Path):
     level = load_level(level_file)
     problem = BloxorzProblem(level)
 
-    path, metrics = solve_ucs(problem)
+    try:
+        path, metrics = solve_ucs(problem)
+    except NotImplementedError:
+        pytest.skip(f"Switch/split tile effects for {level_file.name} pending in rules.py (owner: Long)")
 
     assert path is not None, f"Level {level_file.name} must be solvable!"
     assert metrics.solution_length == len(path)
