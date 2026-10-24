@@ -218,3 +218,74 @@ def test_group_4_combined_levels_solvability_with_rules(monkeypatch):
         states = replay(problem, path)
         assert problem.is_goal(states[-1])
 
+
+def test_astar_unit_cost_optimal_on_g4_combined_02():
+    """Verify A* with unit_cost achieves the true optimal 29 steps on g4_combined_02."""
+    level = load_level(LEVELS_DIR / "g4_combined_02.json")
+    problem = BloxorzProblem(level)
+
+    path_ucs, _ = solve_ucs(problem, cost_fn=unit_cost)
+    path_astar, _ = solve_astar(problem, cost_fn=unit_cost)
+
+    assert path_ucs is not None
+    assert path_astar is not None
+    assert len(path_astar) == 29
+    assert len(path_astar) == len(path_ucs)
+
+
+@pytest.mark.parametrize(
+    "level_name",
+    ["g4_combined_01.json", "g4_combined_02.json", "g4_combined_03.json"],
+)
+@pytest.mark.parametrize(
+    "cost_name,cost_fn,c_stand",
+    [("physics_cost", physics_cost, 3.0), ("unit_cost", unit_cost, 1.0)],
+)
+def test_heuristic_admissibility_backward_dijkstra(
+    level_name: str, cost_name: str, cost_fn, c_stand: float
+):
+    """Verify h(s) <= h*(s) for all reachable states that can reach goal via backward Dijkstra."""
+    import heapq
+    from itertools import count
+
+    level = load_level(LEVELS_DIR / level_name)
+    problem = BloxorzProblem(level)
+    h_fn = make_admissible_heuristic(problem, c_min=1.0, c_stand=c_stand)
+
+    queue = [problem.initial_state]
+    visited = {problem.initial_state}
+    rev_adj: dict[State, list[tuple[State, float]]] = {}
+    goal_states = set()
+
+    while queue:
+        u = queue.pop()
+        if problem.is_goal(u):
+            goal_states.add(u)
+        for act, v in problem.successors(u):
+            w = cost_fn(u, act, v)
+            rev_adj.setdefault(v, []).append((u, w))
+            if v not in visited:
+                visited.add(v)
+                queue.append(v)
+
+    tie = count()
+    dist = {g: 0.0 for g in goal_states}
+    pq = [(0.0, next(tie), g) for g in goal_states]
+
+    while pq:
+        d, _, v = heapq.heappop(pq)
+        if d > dist.get(v, float("inf")):
+            continue
+        for u, w in rev_adj.get(v, []):
+            if d + w < dist.get(u, float("inf")):
+                dist[u] = d + w
+                heapq.heappush(pq, (d + w, next(tie), u))
+
+    for s, h_star in dist.items():
+        h_val = h_fn(s)
+        assert h_val <= h_star + 1e-6, (
+            f"Admissibility violation on {level_name} with {cost_name}: "
+            f"h(s)={h_val} > h*(s)={h_star} for state {s}"
+        )
+
+
