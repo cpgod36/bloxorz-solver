@@ -7,7 +7,7 @@ from itertools import count
 
 from bloxorz.core import Action, BloxorzProblem, State
 
-from .cost import CostFunction, physics_cost
+from .cost import CostFunction, physics_cost, unit_cost
 from .heuristic import HeuristicFunction, make_admissible_heuristic
 from .metrics import MetricsTracker, SearchResult
 
@@ -48,14 +48,15 @@ def solve_astar(
         problem: The BloxorzProblem instance to solve.
         cost_fn: Step cost function c(s, a, s') (defaults to physics_cost).
         heuristic: Heuristic function h(state) -> float. Defaults to
-            ``make_admissible_heuristic(problem)``.
+            ``make_admissible_heuristic(problem, c_stand=1.0 if cost_fn is unit_cost else 3.0)``.
         trace_memory: Whether to track peak memory using tracemalloc (default: True).
 
     Returns:
         SearchResult containing the optimal path and search metrics.
     """
     if heuristic is None:
-        heuristic = make_admissible_heuristic(problem)
+        c_stand = 1.0 if cost_fn is unit_cost else 3.0
+        heuristic = make_admissible_heuristic(problem, c_min=1.0, c_stand=c_stand)
 
     with MetricsTracker(trace_memory=trace_memory) as tracker:
         start_state = problem.initial_state
