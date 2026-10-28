@@ -47,41 +47,52 @@ Theoretical Framework & Proof of Consistency (Monotonicity):
 -----------------------------------------------------------
 A heuristic h(s) is consistent (monotone) if:
     h(s) <= c(s, a, s') + h(s')   for all transitions s -(a)-> s', and h(G) = 0.
-
 Equivalently, the heuristic estimate decreases by at most the step cost:
     h(s) - h(s') <= c(s, a, s').
 
+Let c_min be the minimum action cost (1.0) and c_stand be the cost of standing up.
+For any non-goal state s, the heuristic is bounded below by c_stand (since reaching G
+always requires at least one final standing transition), and is defined as the minimum
+over direct path and split-switch paths:
+    h(s) = min( direct_cost(s, G), min_{T} [ direct_cost(s, T) + split_cost(T_targets) ] )
+
 Proof across all 4 transition classes in Bloxorz:
 1. Normal Block Roll (Non-split -> Non-split):
-   - Rolling a 1 x 1 x 2 block changes Manhattan distance to any fixed target X
-     by at most 2 cells (Delta d <= 2).
-   - Since direct_cost(s, X) = ceil(dist / 2) * c_min, ceil(dist / 2) decreases
-     by at most 1.
-   - Each distance term inside min/max decreases by at most c_min <= c(s, a, s').
-   - For a goal transition (s' = G), landing upright requires a standing move,
-     so c(s, a, G) >= c_stand. Since h(s) <= c_stand when 1 move away and h(G) = 0,
-     we have h(s) - h(G) <= c_stand <= c(s, a, G).
-2. Split Switch Trigger (Roll upright onto T):
-   - The block rolls upright onto split switch T with step cost c(s, a, s') >= direct_cost(s, T).
-   - State s' is split with cubes at targets (t1, t2), so h(s') = split_cost(targets, c_min, c_stand).
-   - At state s, one candidate in the heuristic min was:
-       direct_cost(s, T) + split_cost(targets, c_min, c_stand).
-   - Thus h(s) <= direct_cost(s, T) + h(s'), which gives:
-       h(s) - h(s') <= direct_cost(s, T) <= c(s, a, s').
-3. Single Cube Movement (Split -> Split):
-   - Exactly one 1 x 1 cube rolls 1 cell, costing 1.0 = c_min.
-   - Manhattan distance between cubes changes by at most 1 cell.
-   - split_cost = max(|c1 - c2| - 1, 0) * c_min + c_stand decreases by at most 1 * c_min = c_min.
-   - Thus h(s) - h(s') <= c_min = c(s, a, s').
-4. Cube Recombination (Split -> Non-split Merged Block):
-   - Prior to merge, cubes are adjacent (|c1 - c2| = 1), so h(s) = 0 * c_min + c_stand = c_stand.
-   - Upon merging, state s' is a merged lying block (never a goal state).
-   - By definition, every non-goal state enforces h(s') >= c_stand.
-   - Thus h(s) - h(s') <= c_stand - c_stand = 0 <= c(s, a, s').
+   - Rolling a 1 x 1 x 2 block changes the minimum cell-to-target Manhattan distance
+     dist(s, X) to any fixed target X by at most 2 cells (Delta d <= 2).
+   - Thus, the relaxed roll count ceil(dist(s, X) / 2) decreases by at most 1 per move.
+   - Each candidate branch in h(s) decreases by at most c_min <= c(s, a, s'). Since
+     the min/max operators preserve upper bounds on step differences, h(s) - h(s') <= c_min.
+   - For a goal transition (s' = G), landing upright requires a standing move, so
+     c(s, a, G) >= c_stand. At 1 move away, h(s) = c_stand and h(G) = 0, yielding
+     h(s) - h(G) = c_stand <= c(s, a, G).
+
+2. Split Switch Trigger (Non-split s -> Split s' via upright roll onto T):
+   - Reaching T upright in one step implies direct_cost(s, T) <= c(s, a, s').
+   - Upon landing on T, the block teleports/splits to fixed targets (t1, t2), where
+     h(s') = split_cost((t1, t2)).
+   - Because direct_cost(s, T) + split_cost((t1, t2)) is one of the candidate branches
+     inside the min(.) definition of h(s), we have:
+       h(s) <= direct_cost(s, T) + h(s')  ==>  h(s) - h(s') <= direct_cost(s, T) <= c(s, a, s').
+
+3. Single Cube Movement (Split s -> Split s'):
+   - Moving one 1 x 1 cube by 1 cell costs c(s, a, s') = c_min and changes the inter-cube
+     Manhattan distance |c1 - c2| by at most 1.
+   - Under the relaxed split heuristic h(s) = max(|c1 - c2| - 1, 0) * c_min + c_stand
+     (which intentionally relaxes distance-to-goal to preserve monotonicity), h(s)
+     decreases by at most 1 * c_min = c_min = c(s, a, s').
+
+4. Cube Recombination (Split s -> Merged Non-split s'):
+   - Immediately prior to merging, the two cubes are adjacent (|c1 - c2| = 1), giving
+     h(s) = 0 * c_min + c_stand = c_stand.
+   - Rolling one cube onto the other merges them into a lying block s' (never a goal state).
+   - Because every non-goal state enforces the lower bound h(s') >= c_stand, the heuristic
+     actually increases or stays flat upon merging:
+       h(s) - h(s') <= c_stand - c_stand = 0 <= c(s, a, s').
 
 Empirical Verification:
-- Exhaustively checked on all 16 levels across all 123,355 reachable transition edges:
-  exactly 0 edges violate the triangle inequality under both `physics_cost` and `unit_cost`.
+- Exhaustively verified across all 16 official levels (123,355 reachable transition edges):
+  0 edges violate the triangle inequality under both `physics_cost` and `unit_cost`.
 """
 
 from __future__ import annotations
