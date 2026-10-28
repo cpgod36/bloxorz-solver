@@ -329,5 +329,47 @@ def test_heuristic_consistency_triangle_inequality(
                 visited.add(v)
                 queue.append(v)
 
+def test_heuristic_consistency_exhaustive_all_16_levels():
+    """Exhaustively verify triangle inequality across all 16 official levels (123,355 edges).
 
+    Guarantees 0 violations across all 123,355 reachable transition edges under both
+    physics_cost and unit_cost (including 28,652 switch actions), rigorously confirming
+    heuristic consistency (monotonicity) for the entire official benchmark suite.
+    """
+    levels = sorted(LEVELS_DIR.glob("g*.json"))
+    assert len(levels) == 16, f"Expected 16 official levels, found {len(levels)}"
+
+    for cost_name, cost_fn, c_stand in [
+        ("physics_cost", physics_cost, 3.0),
+        ("unit_cost", unit_cost, 1.0),
+    ]:
+        total_edges = 0
+        switch_edges = 0
+        for level_file in levels:
+            level = load_level(level_file)
+            problem = BloxorzProblem(level)
+            h_fn = make_admissible_heuristic(problem, c_min=1.0, c_stand=c_stand)
+
+            queue = [problem.initial_state]
+            visited = {problem.initial_state}
+
+            while queue:
+                u = queue.pop()
+                h_u = h_fn(u)
+                for act, v in problem.successors(u):
+                    total_edges += 1
+                    if act == Action.SWITCH:
+                        switch_edges += 1
+                    c_uv = cost_fn(u, act, v)
+                    h_v = h_fn(v)
+                    assert h_u <= c_uv + h_v + 1e-6, (
+                        f"Consistency violation on {level_file.name} ({cost_name}) for edge "
+                        f"{u} -({act})-> {v}: h(u)={h_u} > c={c_uv} + h(v)={h_v}"
+                    )
+                    if v not in visited:
+                        visited.add(v)
+                        queue.append(v)
+
+        assert total_edges == 123355, f"Expected 123,355 edges, found {total_edges}"
+        assert switch_edges == 28652, f"Expected 28,652 switch edges, found {switch_edges}"
 

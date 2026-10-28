@@ -56,7 +56,7 @@ always requires at least one final standing transition), and is defined as the m
 over direct path and split-switch paths:
     h(s) = min( direct_cost(s, G), min_{T} [ direct_cost(s, T) + split_cost(T_targets) ] )
 
-Proof across all 4 transition classes in Bloxorz:
+Proof across all 5 transition classes in Bloxorz:
 1. Normal Block Roll (Non-split -> Non-split):
    - Rolling a 1 x 1 x 2 block changes the minimum cell-to-target Manhattan distance
      dist(s, X) to any fixed target X by at most 2 cells (Delta d <= 2).
@@ -83,16 +83,27 @@ Proof across all 4 transition classes in Bloxorz:
      decreases by at most 1 * c_min = c_min = c(s, a, s').
 
 4. Cube Recombination (Split s -> Merged Non-split s'):
-   - Immediately prior to merging, the two cubes are adjacent (|c1 - c2| = 1), giving
-     h(s) = 0 * c_min + c_stand = c_stand.
-   - Rolling one cube onto the other merges them into a lying block s' (never a goal state).
-   - Because every non-goal state enforces the lower bound h(s') >= c_stand, the heuristic
-     actually increases or stays flat upon merging:
-       h(s) - h(s') <= c_stand - c_stand = 0 <= c(s, a, s').
+   - By game rules (SPECIAL_TILES.md §4.4), two cubes automatically recombine into a
+     1 x 1 x 2 lying block s' as soon as they become adjacent. Rolling onto the other cube
+     is illegal (§4.5).
+   - Therefore, immediately prior to any merge step, the two cubes must have Manhattan
+     distance |c1 - c2| = 2.
+   - Hence, h(s) = max(2 - 1, 0) * c_min + c_stand = c_min + c_stand.
+   - The resulting merged state s' is a lying block (never a goal state), so h(s') >= c_stand.
+   - Consequently:
+       h(s) - h(s') <= (c_min + c_stand) - c_stand = c_min <= c(s, a, s').
+
+5. Active Cube Switch (Split s -> Split s' via Action.SWITCH):
+   - Switching the active cube only changes which cube is controlled; both cube positions
+     remain identical.
+   - Since split_cost depends solely on the inter-cube Manhattan distance |c1 - c2|,
+     h(s') = h(s), yielding:
+       h(s) - h(s') = 0 <= c(s, a, s').
 
 Empirical Verification:
-- Exhaustively verified across all 16 official levels (123,355 reachable transition edges):
-  0 edges violate the triangle inequality under both `physics_cost` and `unit_cost`.
+- Exhaustively verified across all 16 official levels (123,355 reachable transition edges,
+  including 28,652 switch actions): 0 edges violate the triangle inequality under both
+  physics_cost and unit_cost.
 """
 
 from __future__ import annotations
@@ -163,8 +174,8 @@ def make_admissible_heuristic(
     Admissibility & Consistency:
       - Admissible: Never overestimates optimal cost h*(s) <= h(s) on any state.
       - Consistent (monotone): Satisfies h(s) <= c(s, a, s') + h(s') on all transitions.
-        Analytically proven across all 4 transition classes (normal roll, split trigger,
-        single-cube roll, and recombination) and verified on 123,355 edges over 16 levels (0 violations).
+        Analytically proven across all 5 transition classes (normal roll, split trigger,
+        single-cube roll, recombination, and active cube switch) and verified on 123,355 edges over 16 levels (0 violations).
 
     Note on Cost Function Configuration:
       ``solve_astar`` automatically chooses ``c_stand`` using an identity check
