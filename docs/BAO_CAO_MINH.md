@@ -200,7 +200,7 @@ $$h(s) \le c(s, a, s') + h(s'), \quad \text{và}\quad h(G) = 0$$
 
 Tương đương: $h(s) - h(s') \le c(s, a, s')$ — heuristic không giảm quá nhanh so với chi phí thực.
 
-**Chứng minh qua 4 lớp bước chuyển:**
+**Chứng minh qua toàn bộ 5 lớp bước chuyển trong Bloxorz:**
 
 **1. Lăn khối nguyên (Non-split → Non-split):**
 - Lăn khối $1\times 1\times 2$ thay đổi khoảng cách Manhattan tối thiểu đến bất kỳ ô mục tiêu $X$ nào tối đa 2 ô ($\Delta d \le 2$).
@@ -214,16 +214,25 @@ Tương đương: $h(s) - h(s') \le c(s, a, s')$ — heuristic không giảm qu�
 - Vì $h_{\text{direct}}(s, T) + \text{split\_cost}((t_1, t_2))$ là một trong các nhánh ứng viên trong phép $\min(.)$ định nghĩa $h(s)$:
 $$h(s) \le h_{\text{direct}}(s, T) + h(s') \implies h(s) - h(s') \le h_{\text{direct}}(s, T) \le c(s, a, s'). \;\checkmark$$
 
-**3. Di chuyển khối lập phương (Split $s$ → Split $s'$):**
+**3. Di chuyển một khối lập phương (Split $s$ → Split $s'$):**
 - Một khối $1\times 1$ di chuyển 1 ô với chi phí $c(s, a, s') = c_{\min}$, thay đổi khoảng cách Manhattan giữa 2 khối tối đa 1 ô.
 - Dưới heuristic nới lỏng $h(s) = \max(|c_1 - c_2| - 1, 0) \times c_{\min} + c_{\text{stand}}$ (cố ý nới lỏng khoảng cách đến đích để bảo toàn tính đơn điệu), $h(s)$ giảm tối đa $1 \times c_{\min} = c_{\min} = c(s, a, s')$. ✓
 
 **4. Hợp nhất khối (Split $s$ → Merged Non-split $s'$):**
-- Ngay trước khi hợp nhất, 2 khối kề nhau ($|c_1 - c_2| = 1$), nên $h(s) = 0 \times c_{\min} + c_{\text{stand}} = c_{\text{stand}}$.
-- Khi hợp nhất thành khối nằm $s'$ (không bao giờ là đích), mọi trạng thái chưa phải đích đều thỏa $h(s') \ge c_{\text{stand}}$, nên heuristic thực tế **tăng hoặc giữ nguyên** sau hợp nhất:
-$$h(s) - h(s') \le c_{\text{stand}} - c_{\text{stand}} = 0 \le c(s, a, s'). \;\checkmark$$
+- Theo luật trò chơi (`docs/SPECIAL_TILES.md` §4.4), hai khối lập phương tự động hợp nhất thành khối nằm $1\times 1\times 2$ ngay khi vừa trở thành kề nhau; việc lăn đè lên khối kia là nước đi phạm quy (§4.5).
+- Do đó, ngay trước bước ghép, khoảng cách Manhattan giữa hai khối luôn là $|c_1 - c_2| = 2$.
+- Khi đó: $h(s) = \max(2 - 1, 0) \times c_{\min} + c_{\text{stand}} = c_{\min} + c_{\text{stand}}$.
+- Khối sau khi hợp nhất là trạng thái nằm $s'$ (chưa thể là đích $G$ vì vào đích buộc phải đứng), do đó $h(s') \ge c_{\text{stand}}$.
+- Suy ra:
+$$h(s) - h(s') \le (c_{\min} + c_{\text{stand}}) - c_{\text{stand}} = c_{\min} \le c(s, a, s'). \;\checkmark$$
 
-**Kiểm chứng thực nghiệm:** Quét kiểm tra toàn bộ 123,355 cạnh chuyển trạng thái (reachable transition edges) trên 16 màn chính thức: **0 cạnh vi phạm** bất đẳng thức tam giác $h(s) \le c(s, a, s') + h(s')$ trên cả `physics_cost` và `unit_cost`.
+**5. Chuyển khối điều khiển (Split $s$ → Split $s'$ qua `Action.SWITCH`):**
+- Hành động đổi khối điều khiển chiếm 28,652 / 123,355 cạnh của đồ thị. Hành động này chỉ thay đổi chỉ số khối được chọn điều khiển, vị trí tọa độ của cả 2 khối hoàn toàn giữ nguyên.
+- Do hàm `split_cost` chỉ phụ thuộc vào khoảng cách Manhattan giữa hai khối $|c_1 - c_2|$, giá trị heuristic không đổi: $h(s') = h(s)$.
+- Suy ra:
+$$h(s) - h(s') = 0 \le c(s, a, s'). \;\checkmark$$
+
+**Kiểm chứng thực nghiệm toàn diện:** Quét kiểm tra toàn bộ 123,355 cạnh chuyển trạng thái có thể đạt tới (reachable transition edges, bao gồm 28,652 bước `Action.SWITCH`) trên cả 16 màn chính thức: **0 cạnh vi phạm** bất đẳng thức tam giác $h(s) \le c(s, a, s') + h(s')$ trên cả `physics_cost` và `unit_cost`.
 
 > [!IMPORTANT]
 > **Ý nghĩa của tính nhất quán (consistent):** Với heuristic consistent, A* đảm bảo rằng mỗi đỉnh khi được pop ra khỏi hàng đợi ưu tiên thì $g(n)$ đã là tối ưu, nên **không bao giờ cần cập nhật lại** (re-open) bất kỳ đỉnh nào. Điều này mạnh hơn chỉ admissible, giúp A* chạy hiệu quả hơn.
