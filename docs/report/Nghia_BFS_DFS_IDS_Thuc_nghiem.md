@@ -144,12 +144,14 @@ GRAPH-SEARCH(problem):
     reached  ← { s0 }                  # các trạng thái đã gặp, kèm con trỏ cha
     while frontier ≠ ∅:
         s ← CHỌN-VÀ-LẤY-RA(frontier)   # điểm khác nhau giữa các giải thuật
+        nếu s là đích: dựng lại đường đi bằng cách lần ngược theo con trỏ cha
         mở rộng s: với mỗi (a, s') ∈ successors(s):
             nếu s' chưa có trong reached:
                 ghi nhận s' (cha = s, hành động = a), đưa s' vào frontier
-        nếu s là đích: dựng lại đường đi bằng cách lần ngược theo con trỏ cha
     return thất bại
 ```
+
+Khung trên kiểm tra đích lúc lấy nút ra, nên nút đích không bao giờ bị mở rộng. DFS và IDS dùng đúng cách này; BFS kiểm tra sớm hơn, ngay khi nút được sinh ra (mục 4.4).
 
 | Giải thuật | Frontier | Chọn nút | Ý nghĩa |
 |---|---|---|---|
@@ -449,7 +451,7 @@ Ngoài ra, mỗi lời giải còn được gán một giá trị **cost** bằn
 Ba biện pháp đảm bảo độ tin cậy của phép đo (Sơ đồ 7):
 
 1. **Mỗi lần đo chạy trong một tiến trình con riêng** với giới hạn thời gian (mặc định 30 giây). Cách này dùng được trên mọi hệ điều hành (không phụ thuộc `SIGALRM`) và tiến trình bị dừng hẳn khi quá hạn.
-2. **Thời gian và bộ nhớ được đo ở hai lần chạy riêng.** `tracemalloc` làm chậm chương trình khoảng 3 lần nên thời gian được đo khi tắt nó; bộ nhớ đỉnh được đo ở một lần chạy bật nó.
+2. **Thời gian và bộ nhớ được đo ở hai lần chạy riêng.** `tracemalloc` làm chậm chương trình khoảng 3 đến 4 lần nên thời gian được đo khi tắt nó; bộ nhớ đỉnh được đo ở một lần chạy bật nó.
 3. **Các lượt chạy nhanh (dưới 1 giây) được lặp lại** (mặc định 3 lần) và lấy **trung vị**, vì màn nhỏ chạy chỉ vài mili giây nên một mẫu đơn lẻ chủ yếu là nhiễu.
 
 **Sơ đồ 7. Quy trình đo một cặp (màn, giải thuật)**
@@ -621,4 +623,106 @@ python -m benchmark.report benchmark/results/<tên>.csv                 # bảng
 python -m benchmark.illustrations                                      # các Hình 1, 2, 3, 4
 ```
 
-Bảng chi tiết đầy đủ cho 80 lượt chạy nằm trong tệp `report_tables.md` do lệnh thứ hai tạo ra.
+Bảng A1 liệt kê đủ 80 lượt chạy (16 màn × 5 giải thuật), lấy từ cùng tệp CSV với các bảng ở mục 9.3. Dấu `*` đánh dấu cost thấp nhất tìm được trên màn đó.
+
+**Bảng A1. Kết quả chi tiết theo từng màn**
+
+*Nhóm g1 (cơ bản)*
+
+| Màn | Giải thuật | Số bước | Cost | Số nút mở rộng | Thời gian (ms) | Bộ nhớ đỉnh (KB) |
+|---|---|---:|---:|---:|---:|---:|
+| g1_basic_01 | BFS | 8 | 12 \* | 41 | 1,01 | 11,5 |
+| g1_basic_01 | DFS | 24 | 38 | 29 | 0,75 | 12,0 |
+| g1_basic_01 | IDS | 8 | 12 \* | 142 | 3,79 | 14,1 |
+| g1_basic_01 | UCS | 8 | 12 \* | 44 | 1,82 | 14,0 |
+| g1_basic_01 | A\* | 8 | 12 \* | 37 | 1,12 | 14,3 |
+| g1_basic_02 | BFS | 12 | 20 \* | 57 | 1,66 | 15,2 |
+| g1_basic_02 | DFS | 18 | 30 | 59 | 1,34 | 17,4 |
+| g1_basic_02 | IDS | 12 | 20 \* | 316 | 5,41 | 17,6 |
+| g1_basic_02 | UCS | 12 | 20 \* | 61 | 1,30 | 18,6 |
+| g1_basic_02 | A\* | 12 | 20 \* | 56 | 3,39 | 19,1 |
+| g1_basic_03 | BFS | 8 | 14 | 65 | 1,71 | 20,3 |
+| g1_basic_03 | DFS | 41 | 67 | 84 | 1,99 | 39,0 |
+| g1_basic_03 | IDS | 8 | 14 | 191 | 4,39 | 23,7 |
+| g1_basic_03 | UCS | 9 | 13 \* | 89 | 2,98 | 35,5 |
+| g1_basic_03 | A\* | 9 | 13 \* | 60 | 1,50 | 24,6 |
+| g1_basic_04 | BFS | 19 | 29 \* | 38 | 0,81 | 9,4 |
+| g1_basic_04 | DFS | 21 | 31 | 30 | 0,73 | 10,3 |
+| g1_basic_04 | IDS | 19 | 29 \* | 473 | 7,08 | 11,7 |
+| g1_basic_04 | UCS | 19 | 29 \* | 40 | 1,16 | 10,2 |
+| g1_basic_04 | A\* | 19 | 29 \* | 37 | 1,10 | 9,8 |
+
+*Nhóm g2 (ô dễ vỡ)*
+
+| Màn | Giải thuật | Số bước | Cost | Số nút mở rộng | Thời gian (ms) | Bộ nhớ đỉnh (KB) |
+|---|---|---:|---:|---:|---:|---:|
+| g2_fragile_01 | BFS | 16 | 24 | 98 | 2,38 | 26,6 |
+| g2_fragile_01 | DFS | 39 | 59 | 59 | 1,21 | 20,4 |
+| g2_fragile_01 | IDS | 16 | 24 | 1.469 | 23,87 | 39,3 |
+| g2_fragile_01 | UCS | 17 | 23 \* | 99 | 1,96 | 32,7 |
+| g2_fragile_01 | A\* | 17 | 23 \* | 93 | 2,14 | 32,0 |
+| g2_fragile_02 | BFS | 19 | 31 \* | 41 | 0,93 | 11,4 |
+| g2_fragile_02 | DFS | 19 | 31 \* | 38 | 0,84 | 13,1 |
+| g2_fragile_02 | IDS | 19 | 31 \* | 460 | 8,86 | 13,3 |
+| g2_fragile_02 | UCS | 19 | 31 \* | 49 | 1,18 | 16,2 |
+| g2_fragile_02 | A\* | 19 | 31 \* | 43 | 1,16 | 14,2 |
+| g2_fragile_03 | BFS | 24 | 38 \* | 87 | 1,64 | 25,0 |
+| g2_fragile_03 | DFS | 35 | 57 | 36 | 1,06 | 15,8 |
+| g2_fragile_03 | IDS | 24 | 38 \* | 2.920 | 45,90 | 35,8 |
+| g2_fragile_03 | UCS | 24 | 38 \* | 94 | 2,47 | 32,2 |
+| g2_fragile_03 | A\* | 24 | 38 \* | 87 | 1,99 | 31,1 |
+| g2_fragile_04 | BFS | 30 | 46 \* | 104 | 3,25 | 27,4 |
+| g2_fragile_04 | DFS | 35 | 55 | 95 | 2,73 | 35,3 |
+| g2_fragile_04 | IDS | 30 | 46 \* | 2.570 | 48,18 | 41,1 |
+| g2_fragile_04 | UCS | 30 | 46 \* | 106 | 2,66 | 33,4 |
+| g2_fragile_04 | A\* | 30 | 46 \* | 104 | 2,31 | 33,1 |
+
+*Nhóm g3 (công tắc và cầu)*
+
+| Màn | Giải thuật | Số bước | Cost | Số nút mở rộng | Thời gian (ms) | Bộ nhớ đỉnh (KB) |
+|---|---|---:|---:|---:|---:|---:|
+| g3_switch_01 | BFS | 15 | 29 \* | 168 | 3,58 | 50,3 |
+| g3_switch_01 | DFS | 55 | 95 | 186 | 3,96 | 66,1 |
+| g3_switch_01 | IDS | 15 | 29 \* | 1.709 | 27,75 | 74,5 |
+| g3_switch_01 | UCS | 15 | 29 \* | 203 | 3,81 | 69,5 |
+| g3_switch_01 | A\* | 15 | 29 \* | 187 | 4,35 | 67,2 |
+| g3_switch_02 | BFS | 14 | 24 \* | 104 | 1,98 | 31,8 |
+| g3_switch_02 | DFS | 53 | 89 | 123 | 2,35 | 46,6 |
+| g3_switch_02 | IDS | 14 | 24 \* | 900 | 14,96 | 40,3 |
+| g3_switch_02 | UCS | 14 | 24 \* | 130 | 2,51 | 45,2 |
+| g3_switch_02 | A\* | 14 | 24 \* | 95 | 2,35 | 36,8 |
+| g3_switch_03 | BFS | 24 | 42 \* | 299 | 7,09 | 101,0 |
+| g3_switch_03 | DFS | 76 | 130 | 186 | 3,08 | 69,7 |
+| g3_switch_03 | IDS | 24 | 42 \* | 7.524 | 173,14 | 152,3 |
+| g3_switch_03 | UCS | 24 | 42 \* | 374 | 6,74 | 136,7 |
+| g3_switch_03 | A\* | 24 | 42 \* | 309 | 6,09 | 130,4 |
+| g3_switch_04 | BFS | 23 | 41 | 301 | 5,58 | 80,5 |
+| g3_switch_04 | DFS | 109 | 167 | 237 | 4,56 | 121,4 |
+| g3_switch_04 | IDS | 23 | 41 | 5.566 | 95,50 | 116,9 |
+| g3_switch_04 | UCS | 24 | 40 \* | 333 | 7,56 | 128,0 |
+| g3_switch_04 | A\* | 24 | 40 \* | 281 | 5,71 | 98,8 |
+
+*Nhóm g4 (kết hợp)*
+
+| Màn | Giải thuật | Số bước | Cost | Số nút mở rộng | Thời gian (ms) | Bộ nhớ đỉnh (KB) |
+|---|---|---:|---:|---:|---:|---:|
+| g4_combined_01 | BFS | 12 | 22 \* | 242 | 3,88 | 108,0 |
+| g4_combined_01 | DFS | 24 | 42 | 42 | 0,96 | 16,6 |
+| g4_combined_01 | IDS | 12 | 22 \* | 1.175 | 19,48 | 135,4 |
+| g4_combined_01 | UCS | 12 | 22 \* | 1.816 | 48,33 | 690,3 |
+| g4_combined_01 | A\* | 12 | 22 \* | 357 | 6,87 | 197,7 |
+| g4_combined_02 | BFS | 29 | 39 \* | 4.597 | 74,68 | 1.233,2 |
+| g4_combined_02 | DFS | 304 | 376 | 390 | 9,11 | 273,8 |
+| g4_combined_02 | IDS | 29 | 39 \* | 104.403 | 1.906,44 | 1.949,9 |
+| g4_combined_02 | UCS | 29 | 39 \* | 4.641 | 81,70 | 1.527,6 |
+| g4_combined_02 | A\* | 29 | 39 \* | 4.552 | 79,85 | 1.659,2 |
+| g4_combined_03 | BFS | 25 | 33 \* | 5.228 | 96,73 | 1.719,6 |
+| g4_combined_03 | DFS | 141 | 181 | 224 | 5,21 | 147,4 |
+| g4_combined_03 | IDS | 25 | 33 \* | 100.085 | 1.745,56 | 2.652,8 |
+| g4_combined_03 | UCS | 25 | 33 \* | 6.932 | 113,06 | 2.440,9 |
+| g4_combined_03 | A\* | 25 | 33 \* | 4.649 | 86,73 | 1.729,5 |
+| g4_combined_04 | BFS | 31 | 45 \* | 11.118 | 171,15 | 3.444,0 |
+| g4_combined_04 | DFS | 167 | 245 | 234 | 3,75 | 142,6 |
+| g4_combined_04 | IDS | 31 | 45 \* | 432.630 | 6.954,95 | 5.465,3 |
+| g4_combined_04 | UCS | 31 | 45 \* | 13.405 | 221,66 | 4.718,5 |
+| g4_combined_04 | A\* | 31 | 45 \* | 11.315 | 204,50 | 4.630,9 |
