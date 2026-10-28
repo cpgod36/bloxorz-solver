@@ -21,6 +21,12 @@ import statistics
 from pathlib import Path
 from typing import Any
 
+import matplotlib
+
+# Figures are only written to files. The default Tk backend cannot be re-initialised
+# within one process on Windows, which made pytest fail once two test modules plotted.
+matplotlib.use("Agg")
+
 ALGORITHMS = ["BFS", "DFS", "IDS", "UCS", "A*"]
 GROUP_TITLES = {
     "g1": "Group 1 - basic",
