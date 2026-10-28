@@ -50,7 +50,7 @@ Mọi giải thuật dùng chung một chữ ký gọi hàm và cùng trả về
 
 Một màn chơi là một lưới các ô vuông. Mỗi ô thuộc một trong các loại: ô trống (void), sàn thường, ô đích, ô dễ vỡ (fragile), cầu (bridge) và ba loại công tắc (mềm, nặng, tách khối). Hình 1 minh họa một màn đại diện cho từng nhóm độ khó trong bộ kiểm thử.
 
-![Bốn nhóm màn](../../Source/benchmark/results/report/fig_level_groups.png)
+![Bốn nhóm màn](../experiments/fig_level_groups.png)
 
 *Hình 1. Bốn màn đại diện cho bốn nhóm độ khó (g1: cơ bản; g2: ô dễ vỡ; g3: công tắc và cầu; g4: kết hợp). Ký hiệu S là ô xuất phát, G là ô đích. Các ô cầu gạch chéo ở trạng thái đóng khi bắt đầu.*
 
@@ -246,7 +246,7 @@ Do đó lần đầu một trạng thái được phát hiện chính là lúc n
 
 **Độ phức tạp.** Mỗi trạng thái được mở rộng tối đa một lần, mỗi lần sinh tối đa b nút con (b ≤ 4, hoặc 5 khi đang tách) và mỗi thao tác tra bảng băm là O(1). Thời gian là O(b·|S|) = O(|S|), và theo độ sâu lời giải d còn bị chặn bởi O(b^d). Bộ nhớ là O(|S|) vì phải giữ cả frontier lẫn `parent`. Thực tế số nút theo từng độ sâu tăng chậm hơn nhiều so với b^d vì đồ thị trạng thái có nhiều đường song song và chu trình (Hình 3).
 
-![Số nút mở rộng theo độ sâu](../../Source/benchmark/results/report/fig_bfs_layers.png)
+![Số nút mở rộng theo độ sâu](../experiments/fig_bfs_layers.png)
 
 *Hình 3. Số nút BFS mở rộng ở từng độ sâu trên màn g4_combined_03: tổng 5.228 nút, lời giải ở độ sâu 25. Số nút theo lớp tăng đến cực đại ở độ sâu 18–19 rồi giảm.*
 
@@ -405,7 +405,7 @@ IDS(problem, max_depth = 100):
 
 Số nút mở rộng ở từng lượt với giới hạn 1, 2, …, 8 là `[1, 3, 6, 13, 20, 31, 44, 24]`, tổng **142 nút**, so với 41 nút của BFS. Lượt giới hạn 1 chỉ mở rộng s0; lượt giới hạn 2 mở rộng s0 cùng hai con của nó (3 nút); mỗi lượt sau lại phải đi qua toàn bộ phần đã duyệt ở lượt trước. Lượt giới hạn 8 dừng sớm (24 nút) vì gặp đích. Lời giải trả về là **DRRURDDR**, trùng với BFS.
 
-![Các lượt lặp của IDS](../../Source/benchmark/results/report/fig_ids_passes.png)
+![Các lượt lặp của IDS](../experiments/fig_ids_passes.png)
 
 *Hình 4. Số nút mở rộng ở từng lượt lặp của IDS trên màn g3_switch_03 (thang log): tổng 7.524 nút so với 299 nút của BFS. Chỉ riêng lượt cuối (giới hạn 24) đã mở rộng 1.189 nút, nhiều hơn toàn bộ BFS.*
 
@@ -500,7 +500,7 @@ Tổng cộng 16 màn × 5 giải thuật (BFS, DFS, IDS, UCS, A\*) = 80 lượt
 
 Hình 2 đặt BFS, DFS và IDS cạnh nhau trên cùng một màn nhỏ (g1_basic_03). Màu của mỗi ô cho biết thời điểm ô đó lần đầu bị một trạng thái được mở rộng chiếm giữ (vàng là sớm, tím là muộn); đường đen là lời giải được trả về.
 
-![Thứ tự khám phá của ba giải thuật](../../Source/benchmark/results/report/fig_exploration_order.png)
+![Thứ tự khám phá của ba giải thuật](../experiments/fig_exploration_order.png)
 
 *Hình 2. Thứ tự khám phá bàn chơi và lời giải của BFS (65 nút, 8 nước), DFS (84 nút, 41 nước) và IDS (191 nút, 8 nước) trên màn g1_basic_03.*
 
@@ -556,11 +556,11 @@ Bảng chi tiết nhóm khó nhất (g4), nơi các giải thuật phân biệt 
 
 Bảng đầy đủ cho cả 16 màn và 5 giải thuật được đưa vào Phụ lục.
 
-![So sánh bốn chỉ số theo nhóm](../../Source/benchmark/results/report/fig_metrics_by_group.png)
+![So sánh bốn chỉ số theo nhóm](../experiments/fig_metrics_by_group.png)
 
 *Hình 5. Thời gian, bộ nhớ, số nút mở rộng (thang log) và độ dài lời giải theo nhóm màn (trung bình nhân).*
 
-![Các màn nhóm g4](../../Source/benchmark/results/report/fig_hardest_levels.png)
+![Các màn nhóm g4](../experiments/fig_hardest_levels.png)
 
 *Hình 6. Thời gian và số nút mở rộng trên 4 màn khó nhất (nhóm g4), thang log.*
 
@@ -572,7 +572,7 @@ Bảng đầy đủ cho cả 16 màn và 5 giải thuật được đưa vào Ph
 - Số bước nhỏ nhất **chưa chắc là cost nhỏ nhất**. Ở 3/16 màn, UCS và A\* tìm được lời giải có cost thấp hơn dù nhiều bước hơn: `g1_basic_03` (BFS 8 bước, cost 14; UCS 9 bước, cost 13), `g2_fragile_01` (16 bước, cost 24; so với 17 bước, cost 23) và `g3_switch_04` (23 bước, cost 41; so với 24 bước, cost 40). Mức vượt trung bình chỉ 0,6 đến 1,9% ở g1–g3 và 0% ở g4 (Hình 7). Hai thước đo "số nước đi" và `physics_cost` trùng nhau ở hầu hết các màn nhưng không phải luôn luôn, nên BFS và IDS tối ưu theo số nước đi mà không đảm bảo tối ưu theo cost.
 - DFS là giải thuật duy nhất cho lời giải **kém hẳn**: dài gấp 1,0 đến 10,5 lần lời giải ngắn nhất (trung vị khoảng 3,1 lần) và chỉ đạt cost tối ưu ở 1/16 màn (`g2_fragile_02`). Ở g4 lời giải trung bình là 114,5 nước so với 22,8 nước, cost cao hơn khoảng 384%. Màn tệ nhất là `g4_combined_02`: 304 nước so với 29 nước tối ưu.
 
-![Chi phí vượt mức tối ưu](../../Source/benchmark/results/report/fig_cost_ratio.png)
+![Chi phí vượt mức tối ưu](../experiments/fig_cost_ratio.png)
 
 *Hình 7. Phần trăm cost vượt so với cost thấp nhất tìm được trên mỗi màn (0 nghĩa là tối ưu theo `physics_cost`).*
 
@@ -622,6 +622,8 @@ python -m benchmark.benchmark --output benchmark/results/<tên>.csv     # chạy
 python -m benchmark.report benchmark/results/<tên>.csv                 # bảng (report_tables.md) và các Hình 5, 6, 7
 python -m benchmark.illustrations                                      # các Hình 1, 2, 3, 4
 ```
+
+Tệp CSV, bảng và 7 hình dùng trong bài được lưu ở [docs/experiments/](../experiments/README.md), kèm cấu hình máy và commit để chạy lại.
 
 Bảng A1 liệt kê đủ 80 lượt chạy (16 màn × 5 giải thuật), lấy từ cùng tệp CSV với các bảng ở mục 9.3. Dấu `*` đánh dấu cost thấp nhất tìm được trên màn đó.
 
