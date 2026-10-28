@@ -49,6 +49,9 @@ def solve_astar(
         cost_fn: Step cost function c(s, a, s') (defaults to physics_cost).
         heuristic: Heuristic function h(state) -> float. Defaults to
             ``make_admissible_heuristic(problem, c_stand=1.0 if cost_fn is unit_cost else 3.0)``.
+            Note: The default heuristic automatically determines ``c_stand`` via
+            an identity check (``cost_fn is unit_cost``). Any custom or third cost
+            function must pass an explicitly configured heuristic instance.
         trace_memory: Whether to track peak memory using tracemalloc (default: True).
 
     Returns:

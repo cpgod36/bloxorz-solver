@@ -289,3 +289,45 @@ def test_heuristic_admissibility_backward_dijkstra(
         )
 
 
+@pytest.mark.parametrize(
+    "level_name",
+    [
+        "g1_basic_01.json",
+        "g2_fragile_01.json",
+        "g3_switch_01.json",
+        "g4_combined_01.json",
+        "g4_combined_02.json",
+        "g4_combined_03.json",
+    ],
+)
+@pytest.mark.parametrize(
+    "cost_name,cost_fn,c_stand",
+    [("physics_cost", physics_cost, 3.0), ("unit_cost", unit_cost, 1.0)],
+)
+def test_heuristic_consistency_triangle_inequality(
+    level_name: str, cost_name: str, cost_fn, c_stand: float
+):
+    """Verify h(u) <= c(u, a, v) + h(v) across all reachable transition edges."""
+    level = load_level(LEVELS_DIR / level_name)
+    problem = BloxorzProblem(level)
+    h_fn = make_admissible_heuristic(problem, c_min=1.0, c_stand=c_stand)
+
+    queue = [problem.initial_state]
+    visited = {problem.initial_state}
+
+    while queue:
+        u = queue.pop()
+        h_u = h_fn(u)
+        for act, v in problem.successors(u):
+            c_uv = cost_fn(u, act, v)
+            h_v = h_fn(v)
+            assert h_u <= c_uv + h_v + 1e-6, (
+                f"Consistency violation on {level_name} ({cost_name}) for edge "
+                f"{u} -({act})-> {v}: h(u)={h_u} > c={c_uv} + h(v)={h_v}"
+            )
+            if v not in visited:
+                visited.add(v)
+                queue.append(v)
+
+
+
