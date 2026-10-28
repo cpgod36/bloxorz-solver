@@ -14,19 +14,19 @@
 
 ## 1. Tổng quan Công việc & Lịch trình Thực hiện
 
-Trong Đồ án 1, kiến trúc nền tảng và mô hình bài toán cốt lõi—bao gồm cấu trúc `State(block, cubes, bridges)`, bảng chuyển tư thế (`geometry.py`), bộ đọc màn chơi (`level.py`) và interface bài toán (`problem.py`)—do Trưởng nhóm **Phan Chí Cao** thiết kế và cài đặt tại PR [#1](https://github.com/cpgod36/bloxorz-solver/pull/1).
+Trong Đồ án 1, kiến trúc nền tảng và mô hình bài toán cốt lõi—bao gồm cấu trúc `State(block, cubes, bridges)`, bảng chuyển tư thế (`geometry.py`), bộ đọc màn chơi (`level.py`) và interface bài toán (`problem.py`)—do Trưởng nhóm **Phan Chí Cao** thiết kế và cài đặt tại PR [#1](https://github.com/cpgod36/bloxorz-solver/pull/1). PR này cũng tạo khung của `rules.py` với các luật đề bài đã nêu rõ: `is_passable` (ô ngoài bàn, ô trống, cầu đóng), khối đứng trên ô dễ vỡ thì rơi trong `is_legal`, và phân biệt công tắc mềm/nặng trong `pressed_switches`.
 
-Dựa trên nền tảng đó, sinh viên **Võ Phùng Nhật Long** chịu trách nhiệm nghiên cứu, quy ước và cài đặt toàn bộ hệ thống luật tương tác cho các ô đặc biệt trong module [bloxorz/core/rules.py](../Source/bloxorz/core/rules.py) (theo phân công tại [docs/PHAN_CONG.md](PHAN_CONG.md)):
-- Kiểm tra ô đi qua được `is_passable` và tính hợp lệ của trạng thái `is_legal` (xử lý sập sàn dễ vỡ dưới khối đứng, ngăn ngừa va chạm giữa hai khối lập phương).
-- Lọc công tắc kích hoạt `pressed_switches` (phân biệt công tắc mềm `O` và công tắc nặng `X`; xử lý cô lập khối đứng yên trong chế độ phân tách).
+Dựa trên nền tảng đó, sinh viên **Võ Phùng Nhật Long** chịu trách nhiệm nghiên cứu, quy ước và cài đặt các luật tương tác của ô đặc biệt mà đề bài để ngỏ, trong module [bloxorz/core/rules.py](../Source/bloxorz/core/rules.py) (theo phân công tại [docs/PHAN_CONG.md](PHAN_CONG.md)):
+- Bổ sung vào `is_legal`: ngăn hai khối lập phương trùng ô; quy ước một khối lập phương đơn được đứng trên ô dễ vỡ.
+- Bổ sung vào `pressed_switches`: trong chế độ phân tách, chỉ khối vừa di chuyển (`state.cubes[0]`) kích hoạt công tắc.
 - Cơ chế tự động hợp nhất khối `try_merge` khi hai khối lập phương kề cạnh nhau (khoảng cách Manhattan bằng $1$).
 - Áp dụng toàn bộ hiệu ứng môi trường trong `apply_effects` (đảo, mở, đóng cầu, sập cầu dưới chân, dịch chuyển tức thời khi đè công tắc tách).
-- Xây dựng bộ 29 unit tests độc lập tại [Source/tests/test_rules.py](../Source/tests/test_rules.py) bao phủ 100% các quy tắc và 10 trường hợp biên (Edge Cases).
+- Xây dựng bộ 29 unit tests độc lập tại [Source/tests/test_rules.py](../Source/tests/test_rules.py) cho các quy tắc trên và 10 trường hợp biên (Edge Cases).
 
 | Thời gian | Nhiệm vụ | Kết quả đạt được | Mã nguồn & Tài liệu |
 |:---:|---|:---:|---|
 | **18/10** | Xây dựng tài liệu quy ước ô đặc biệt và các trường hợp biên | Hoàn thành | [docs/SPECIAL_TILES.md](SPECIAL_TILES.md) (PR #3 đã merge vào `main`) |
-| **22/10** | Cài đặt Ô dễ vỡ (`Fragile`), Cầu (`Bridge`), Công tắc mềm/nặng (`toggle/permanent`), Edge Case 1 | Hoàn thành | Logic tại [rules.py](../Source/bloxorz/core/rules.py), 17 tests tại `test_rules.py` (Nhánh `feat/long-switch-rules`) |
+| **23/10** | Cài đặt Ô dễ vỡ (`Fragile`), Cầu (`Bridge`), Công tắc mềm/nặng (`toggle/permanent`), Edge Case 1 | Hoàn thành | Logic tại [rules.py](../Source/bloxorz/core/rules.py), 17 tests tại `test_rules.py` (Nhánh `feat/long-switch-rules`) |
 | **23/10** | Cài đặt Công tắc tách (`SPLIT_SWITCH`), Chế độ tách & Tự động ghép khối (`MERGE`) | Hoàn thành | Hoàn thiện [rules.py](../Source/bloxorz/core/rules.py), 29 tests tại `test_rules.py` (Nhánh `feat/long-split-merge`) |
 | **28/10** | Chuẩn bị nội dung báo cáo kỹ thuật & hỗ trợ kịch bản video demo | Hoàn thành | Tài liệu `docs/BAO_CAO_LONG.md` |
 
