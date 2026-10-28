@@ -76,6 +76,17 @@ def pressed_switches(level: Level, state: State) -> list[Switch]:
     return pressed
 
 
+def _apply_switch(switch: Switch, bridges: int) -> int:
+    """Apply the bridge effect (toggle/open/close) of a switch to the bridges bitmask."""
+    if switch.effect is BridgeEffect.TOGGLE:
+        return bridges ^ switch.bridge_mask
+    if switch.effect is BridgeEffect.OPEN:
+        return bridges | switch.bridge_mask
+    if switch.effect is BridgeEffect.CLOSE:
+        return bridges & ~switch.bridge_mask
+    return bridges
+
+
 def apply_effects(level: Level, state: State) -> State | None:
     """Return the state after the tiles under the landed block react, or None if the block falls.
 
@@ -85,12 +96,7 @@ def apply_effects(level: Level, state: State) -> State | None:
     bridges = state.bridges
     for switch in pressed_switches(level, state):
         if switch.kind in (SwitchKind.SOFT, SwitchKind.HEAVY):
-            if switch.effect is BridgeEffect.TOGGLE:
-                bridges ^= switch.bridge_mask
-            elif switch.effect is BridgeEffect.OPEN:
-                bridges |= switch.bridge_mask
-            elif switch.effect is BridgeEffect.CLOSE:
-                bridges &= ~switch.bridge_mask
+            bridges = _apply_switch(switch, bridges)
         elif switch.kind is SwitchKind.SPLIT:
             # Block standing on a split switch teleports and splits into two cubes (spec 2.5).
             assert switch.targets is not None
@@ -104,12 +110,7 @@ def apply_effects(level: Level, state: State) -> State | None:
             for target in (t1, t2):
                 target_sw = level.switches.get(target)
                 if target_sw is not None and target_sw.kind is SwitchKind.SOFT:
-                    if target_sw.effect is BridgeEffect.TOGGLE:
-                        bridges ^= target_sw.bridge_mask
-                    elif target_sw.effect is BridgeEffect.OPEN:
-                        bridges |= target_sw.bridge_mask
-                    elif target_sw.effect is BridgeEffect.CLOSE:
-                        bridges &= ~target_sw.bridge_mask
+                    bridges = _apply_switch(target_sw, bridges)
 
             # Verify both cubes still have support after switch effects
             if not (is_passable(level, t1, bridges) and is_passable(level, t2, bridges)):

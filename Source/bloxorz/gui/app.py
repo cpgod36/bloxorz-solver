@@ -9,7 +9,7 @@ import threading
 import pygame
 
 from bloxorz.core import Action, BloxorzProblem, State, load_level, replay, roll, step
-from bloxorz.solvers import SearchMetrics, astar, bfs, dfs, ucs
+from bloxorz.solvers import SearchMetrics, astar, bfs, dfs, physics_cost, ucs
 from . import renderer, theme
 from .renderer import MoveTransition
 from .widgets import Button
@@ -95,7 +95,7 @@ class BloxorzApp:
             "Solution Length": "-",
             "Expanded Nodes": "-",
             "Search Time": "-",
-            "Peak Memory": "-",
+            "Cost": "-",
         }
         # Worker thread -> main thread channel: (kind, algo_name, result).
         # Only the main thread mutates GUI state.
@@ -253,22 +253,32 @@ class BloxorzApp:
 
         def _worker() -> None:
             try:
-                result = solver(problem)
+                # tracemalloc hooks every allocation in the process, including the render
+                # loop, making solving 3-4x slower and the GUI stutter. Memory is measured
+                # by the benchmark instead.
+                result = solver(problem, trace_memory=False)
                 self.solver_results.put(("SUCCESS", algo_name, result))
             except Exception as exc:  # never leave the GUI stuck in SOLVING
                 self.solver_results.put(("ERROR", algo_name, str(exc)))
 
         threading.Thread(target=_worker, daemon=True).start()
 
+    def _path_cost(self, path: list[Action] | None) -> float | None:
+        """Total physics_cost of a path, the cost UCS and A* minimise, for every solver alike."""
+        if path is None:
+            return None
+        states = replay(self.problem, path)
+        return sum(physics_cost(s, a, t) for s, a, t in zip(states, path, states[1:]))
+
     @staticmethod
-    def _format_metrics(algo_name: str, metrics: SearchMetrics) -> dict[str, str]:
+    def _format_metrics(algo_name: str, metrics: SearchMetrics, cost: float | None) -> dict[str, str]:
         """Convert SearchMetrics into the sidebar's display strings."""
         return {
             "Algorithm": algo_name,
             "Solution Length": f"{metrics.solution_length}" if metrics.solution_length is not None else "-",
             "Expanded Nodes": f"{metrics.expanded_nodes}" if metrics.expanded_nodes is not None else "-",
             "Search Time": f"{metrics.search_time * 1000:.3f} ms" if metrics.search_time is not None else "-",
-            "Peak Memory": f"{metrics.peak_memory / 1024:.3f} KB" if metrics.peak_memory is not None else "-",
+            "Cost": f"{cost:g}" if cost is not None else "-",
         }
 
     def _process_solver_results(self) -> None:
@@ -285,7 +295,7 @@ class BloxorzApp:
             return
 
         path, metrics = result
-        self.metrics_info = self._format_metrics(algo_name, metrics)
+        self.metrics_info = self._format_metrics(algo_name, metrics, self._path_cost(path))
 
         if path is None:
             self.status = GameStatus.PLAYING
