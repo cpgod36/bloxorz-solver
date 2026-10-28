@@ -8,14 +8,20 @@
 - **Họ và tên:** Võ Phùng Nhật Long
 - **MSSV:** 24120088
 - **Lớp:** CSC14003 — Khoa Công nghệ Thông tin, Trường ĐH Khoa học Tự nhiên, ĐHQG-HCM
-- **Phần việc đảm nhiệm:** Module `bloxorz/core/`: Các ô đặc biệt (Fragile, Bridges, Soft/Heavy/Split switches, Split/Merge mechanics), tài liệu quy ước `docs/SPECIAL_TILES.md`, và bộ kiểm thử `Source/tests/test_rules.py`.
-- **Mức độ hoàn thành:** 100% (Hoàn thành đầy đủ các mốc theo phân công).
+- **Phần việc đảm nhiệm:** Module `bloxorz/core/`: Các quy tắc ô đặc biệt trong [rules.py](../Source/bloxorz/core/rules.py) (Fragile, Bridges, Soft/Heavy/Split switches, Split/Merge mechanics), tài liệu quy ước [docs/SPECIAL_TILES.md](SPECIAL_TILES.md), và bộ kiểm thử [Source/tests/test_rules.py](../Source/tests/test_rules.py).
 
 ---
 
 ## 1. Tổng quan Công việc & Lịch trình Thực hiện
 
-Trong khuôn khổ Đồ án 1 môn Cơ sở Trí tuệ Nhân tạo, sinh viên chịu trách nhiệm xây dựng toàn bộ mô hình chuyển trạng thái (Transition Model) và các quy tắc vật lý cho hệ thống ô đặc biệt trên bàn cờ Bloxorz (chi tiết phân công tại [docs/PHAN_CONG.md](PHAN_CONG.md)). Module này đóng vai trò miền bài toán cốt lõi (Core Domain), cung cấp các hàm chuyển tiếp trạng thái chuẩn xác cho các thuật toán tìm kiếm không gian trạng thái (BFS, DFS/IDS, UCS, A\*) và hỗ trợ kết nối hiển thị trên giao diện đồ họa (GUI).
+Trong Đồ án 1, kiến trúc nền tảng và mô hình bài toán cốt lõi—bao gồm cấu trúc `State(block, cubes, bridges)`, bảng chuyển tư thế (`geometry.py`), bộ đọc màn chơi (`level.py`) và interface bài toán (`problem.py`)—do Trưởng nhóm **Phan Chí Cao** thiết kế và cài đặt tại PR [#1](https://github.com/cpgod36/bloxorz-solver/pull/1).
+
+Dựa trên nền tảng đó, sinh viên **Võ Phùng Nhật Long** chịu trách nhiệm nghiên cứu, quy ước và cài đặt toàn bộ hệ thống luật tương tác cho các ô đặc biệt trong module [bloxorz/core/rules.py](../Source/bloxorz/core/rules.py) (theo phân công tại [docs/PHAN_CONG.md](PHAN_CONG.md)):
+- Kiểm tra ô đi qua được `is_passable` và tính hợp lệ của trạng thái `is_legal` (xử lý sập sàn dễ vỡ dưới khối đứng, ngăn ngừa va chạm giữa hai khối lập phương).
+- Lọc công tắc kích hoạt `pressed_switches` (phân biệt công tắc mềm `O` và công tắc nặng `X`; xử lý cô lập khối đứng yên trong chế độ phân tách).
+- Cơ chế tự động hợp nhất khối `try_merge` khi hai khối lập phương kề cạnh nhau (khoảng cách Manhattan bằng $1$).
+- Áp dụng toàn bộ hiệu ứng môi trường trong `apply_effects` (đảo, mở, đóng cầu, sập cầu dưới chân, dịch chuyển tức thời khi đè công tắc tách).
+- Xây dựng bộ 29 unit tests độc lập tại [Source/tests/test_rules.py](../Source/tests/test_rules.py) bao phủ 100% các quy tắc và 10 trường hợp biên (Edge Cases).
 
 | Thời gian | Nhiệm vụ | Kết quả đạt được | Mã nguồn & Tài liệu |
 |:---:|---|:---:|---|
@@ -26,10 +32,10 @@ Trong khuôn khổ Đồ án 1 môn Cơ sở Trí tuệ Nhân tạo, sinh viên 
 
 ---
 
-## 2. Mô hình Không gian Trạng thái & Kỹ thuật Nén Bitmask
+## 2. Cấu trúc Trạng thái & Cơ chế Bitmask Cầu (Sử dụng từ Phần Lõi)
 
 ### 2.1. Biểu diễn trạng thái (`State`)
-Không gian trạng thái mở rộng của bài toán được mô hình hóa bằng cấu trúc dữ liệu bất biến (`Immutable NamedTuple`):
+Module `rules.py` tiếp nhận và thao tác trực tiếp trên cấu trúc dữ liệu trạng thái bất biến (`Immutable NamedTuple`) được định nghĩa từ phần lõi của hệ thống (PR [#1](https://github.com/cpgod36/bloxorz-solver/pull/1)):
 
 $$\text{State} = \langle \text{block}, \text{cubes}, \text{bridges} \rangle$$
 
@@ -37,14 +43,16 @@ $$\text{State} = \langle \text{block}, \text{cubes}, \text{bridges} \rangle$$
 - $\text{cubes}$: Cặp tọa độ $((r_1, c_1), (r_2, c_2))$ theo thứ tự $(controlled, other)$ khi ở chế độ phân tách. Nhận giá trị `None` khi ở trạng thái khối nguyên.
 - $\text{bridges}$: Số nguyên (`int`) đóng vai trò mặt nạ bit đại diện cho trạng thái đóng/mở của toàn bộ các ô cầu trên bàn cờ.
 
-### 2.2. Kỹ thuật quản lý trạng thái cầu bằng Bitmask ($O(1)$)
-- **Vấn đề đặt ra:** Một màn chơi có thể có nhiều ô cầu độc lập. Nếu biểu diễn trạng thái cầu bằng danh sách hoặc tập hợp tọa độ (`set`), trạng thái sẽ là mutable, không thể băm (`__hash__`) để đưa vào tập đóng (`Closed Set`) của BFS/A\*, đồng thời gây tốn bộ nhớ khi thuật toán duyệt hàng chục ngàn nút.
-- **Giải pháp:** Sử dụng một số nguyên duy nhất ($B \in \mathbb{N}$) làm mặt nạ nhị phân:
+### 2.2. Cơ chế quản lý trạng thái cầu bằng Bitmask ($O(1)$)
+- **Vấn đề đặt ra:** Một màn chơi có thể có nhiều ô cầu độc lập. Để lưu trữ trạng thái đóng/mở của các cây cầu, nếu sử dụng các cấu trúc tập hợp như `set` (mutable, không băm được) hay kể cả `frozenset` (tuy immutable và băm được nhưng tốn chi phí cấp phát nhiều đối tượng và con trỏ trên bộ nhớ heap) sẽ gây áp lực lớn lên RAM và tăng chi phí băm khi các thuật toán tìm kiếm (BFS, A\*) phải lưu trữ hàng vạn trạng thái trong tập đóng (`Closed Set`).
+- **Giải pháp từ phần lõi:** Kiến trúc lõi sử dụng một số nguyên duy nhất ($B \in \mathbb{N}$) làm mặt nạ nhị phân (Bitmask):
   - Mỗi ô cầu $c$ được ánh xạ tới một vị trí bit duy nhất $i = \text{level.bridge\_bit}[c]$.
   - Bit $i = 1$: Cầu mở (hoạt động như ô sàn `FLOOR` bình thường).
   - Bit $i = 0$: Cầu đóng (hoạt động như ô trống `VOID`, khối chạm vào sẽ rơi xuống vực).
+  - Cách tiếp cận này giúp trạng thái cực kỳ gọn nhẹ (compact memory footprint), tái sử dụng hiệu quả và tăng tốc độ kiểm tra.
 
 - **Các thao tác cập nhật trạng thái cầu bằng đại số Boolean ($O(1)$):**
+  Trong `rules.apply_effects`, các hiệu ứng công tắc tác động lên trạng thái cầu được thực thi thông qua các phép toán bitwise:
   - **Kiểm tra ô cầu mở:**
     $$\text{IsOpen}(c, B) \iff (B \gg \text{bridge\_bit}[c]) \ \& \ 1 = 1$$
   - **Đảo trạng thái (`TOGGLE`):** Dùng phép XOR bitwise:
@@ -55,7 +63,7 @@ $$\text{State} = \langle \text{block}, \text{cubes}, \text{bridges} \rangle$$
     $$B_{new} = B \ \& \ (\sim M)$$
   - **Hỗ trợ Multi-bridges:** Một công tắc liên kết tới $k$ ô cầu ($k \ge 1$) được gom vào một mặt nạ chung:
     $$M = \sum_{j=1}^{k} 2^{\text{bridge\_bit}[c_j]}$$
-    Nhờ đó, việc đóng/mở đồng thời toàn bộ các ô cầu liên kết luôn diễn ra trong duy nhất $1$ chu kỳ máy ($O(1)$).
+    Nhờ các phép toán bitwise trên số nguyên, việc đóng/mở đồng thời toàn bộ các ô cầu liên kết luôn đạt độ phức tạp thời gian thuật toán $O(1)$ với số lượng ô cầu nhỏ.
 
 ---
 
