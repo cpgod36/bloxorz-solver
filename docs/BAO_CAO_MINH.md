@@ -71,8 +71,8 @@ Bảng quy đổi chi phí hoàn chỉnh:
 |---|---|---|
 | Lăn ngang (nằm → nằm) | $1.0$ | $\Delta h_{\text{roll}} = \frac{\sqrt{2}-1}{2} \approx 0.21$, chọn làm chuẩn baseline. |
 | Dựng đứng (nằm → đứng) | $3.0$ | $\Delta h_{\text{stand}} = \frac{\sqrt{5}-1}{2} \approx 0.62$, gấp $\approx 3\times$ baseline ($2.98 \approx 3.0$). |
-| Lật xuống (đứng → nằm) | $1.0$ | Trọng lực hỗ trợ hạ thấp khối tâm, công nâng thế năng $\le 0$, quy về chi phí cơ sở. |
-| Di chuyển khối lập phương $1\times 1$ | $1.0$ | Khối $1\times 1$ có quán tính nhỏ, nỗ lực di chuyển tối thiểu. |
+| Lật xuống (đứng → nằm) | $1.0$ | Khối tâm ở độ cao $1.0$, quay quanh cạnh đáy lên bán kính đỉnh $R = \frac{\sqrt{5}}{2} \approx 1.118 \implies \Delta h \approx 0.118$ (khoảng $0.57\times$ baseline) trước khi đổ xuống. Nhóm làm tròn lên $1.0$ để duy trì $c_{\min} = 1.0$, trực tiếp bảo toàn tính chấp nhận được (admissible) cho các cận dưới $\lceil d/2 \rceil \times c_{\min}$ của heuristic A*. |
+| Di chuyển khối lập phương $1\times 1$ | $1.0$ | Khối $1\times 1$ lăn quanh cạnh có $\Delta h = \frac{\sqrt{2}-1}{2} \approx 0.207$, bằng đúng baseline của bước lăn ngang khối nguyên. |
 
 Hàm chi phí này tạo ra sự khác biệt bản chất giữa UCS và BFS: UCS sẽ **ưu tiên các đường lăn ngang** thay vì dựng đứng khi cả hai đều đi được đến đích, giúp giảm tổng hao tổn năng lượng.
 
@@ -80,7 +80,7 @@ Hàm chi phí này tạo ra sự khác biệt bản chất giữa UCS và BFS: U
 
 - **Thời gian:** $O(|E| \log |V|) = O(|V| \log |V|)$
   - Do sử dụng **Lazy deletion** (không dùng thao tác `decrease-key` vốn tốn kém), mỗi cạnh chuyển trạng thái $(s, a, s')$ có thể đẩy thêm một bản sao trạng thái vào MinHeap khi tìm thấy đường rẻ hơn. Kích thước tối đa của heap là $O(|E|)$, chi phí mỗi thao tác heap là $O(\log |E|) = O(\log |V|^2) = O(\log |V|)$.
-  - Trong không gian trạng thái của Bloxorz, bậc ra của mỗi trạng thái luôn bị chặn trên bởi một hằng số nhỏ ($\deg(s) \le 4$ khi nguyên khối và $\deg(s) \le 8$ khi tách thành 2 khối $1\times 1$). Vì vậy, tổng số cạnh thỏa mãn $|E| \le 8|V| = O(|V|)$.
+  - Trong không gian trạng thái của Bloxorz, bậc ra của mỗi trạng thái luôn bị chặn trên bởi một hằng số nhỏ ($\deg(s) \le 4$ khi nguyên khối, và $\deg(s) \le 5$ khi tách thành 2 khối gồm tối đa 4 hướng lăn + 1 hành động `SWITCH`). Vì vậy, tổng số cạnh thỏa mãn $|E| \le 5|V| = O(|V|)$.
   - Do đó: $O(|E| \log |E|) = O(|V| \log |V|)$.
 - **Không gian:** $O(|E|) = O(|V|)$ cho `frontier` trong trường hợp xấu nhất, và $O(|V|)$ để lưu trữ bảng `best_cost` cùng `parent`.
 
@@ -322,6 +322,6 @@ $$h(s) - h(s') = 0 \le c(s, a, s'). \;\checkmark$$
 | Ưu điểm | Nhược điểm |
 |---|---|
 | Giảm đáng kể số đỉnh mở rộng so với UCS (trung bình 21–29%). | Cần thiết kế heuristic chặt chẽ: sai sẽ mất tính tối ưu. |
-| Vẫn đảm bảo tính tối ưu nhờ heuristic admissible + consistent. | Heuristic dựa trên Manhattan distance nên ít hiệu quả trên bản đồ hẹp, dài, hoặc bản đồ có nhiều cầu (khoảng cách Euclid bị biến dạng bởi cầu đóng/mở). |
+| Vẫn đảm bảo tính tối ưu nhờ heuristic admissible + consistent. | Heuristic dựa trên Manhattan distance nên ít hiệu quả trên bản đồ hẹp, dài, hoặc bản đồ có nhiều cầu (khoảng cách Manhattan bị biến dạng do cầu đóng/mở làm gián đoạn đường đi thực tế). |
 | Heuristic consistent → không bao giờ re-open đỉnh → hiệu quả bộ nhớ. | Trên bản đồ nhỏ (< 100 đỉnh), chi phí tính heuristic có thể không bù được lợi ích cắt tỉa. |
 | Trên bản đồ lớn (g4), tiết kiệm tới 80% số đỉnh mở rộng. | Cần điều chỉnh tham số $c_{\text{stand}}$ theo hàm chi phí (đã tự động hóa). |
