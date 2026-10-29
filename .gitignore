@@ -31,3 +31,4 @@ docs/report/latex/*.toc
 docs/report/latex/*.synctex.gz
 docs/report/latex/*.fdb_latexmk
 docs/report/latex/*.fls
+docs/report/latex/main.pdf

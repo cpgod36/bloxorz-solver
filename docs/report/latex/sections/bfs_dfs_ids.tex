@@ -26,9 +26,11 @@ Khung trên kiểm tra đích lúc lấy nút ra, nên nút đích không bao gi
 \hline
 \textbf{Giải thuật} & \textbf{Frontier} & \textbf{Chọn nút} & \textbf{Ý nghĩa} \\ \hline
 \endhead
+\hline
+\endlastfoot
 BFS & Hàng đợi FIFO (\texttt{deque}) & Nút vào sớm nhất & Duyệt theo từng lớp độ sâu \\ \hline
 DFS & Ngăn xếp LIFO (\texttt{list}) & Nút vào muộn nhất & Đi sâu trước, quay lui sau \\ \hline
-IDS & Ngăn xếp, có giới hạn độ sâu tăng dần & Như DFS trong mỗi lượt & Lặp lại DFS với giới hạn 1, 2, 3, … \\ \hline
+IDS & Ngăn xếp, có giới hạn độ sâu tăng dần & Như DFS trong mỗi lượt & Lặp lại DFS với giới hạn 1, 2, 3, … \\
 \end{longtable}
 }
 
@@ -44,10 +46,12 @@ BFS mở rộng toàn bộ các trạng thái cách trạng thái đầu 0 nư�
 
 \subsubsection{Lưu đồ}
 
-\begin{sodo}[H]
+Lưu đồ của BFS được trình bày ở Sơ đồ 4.
+
+\begin{sodo}[!htbp]
 \centering
 \caption{Lưu đồ BFS}
-\includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{images/sodo4.pdf}
+\includegraphics[width=1.0\linewidth,height=0.88\textheight,keepaspectratio]{images/sodo4.pdf}
 \end{sodo}
 
 \subsubsection{Mã giả}
@@ -86,10 +90,12 @@ Màn gồm lưới 3 hàng × 6 cột toàn sàn thường, xuất phát tại (
 \hline
 \textbf{Bước} & \textbf{Nút được lấy ra} & \textbf{Các nút con sinh ra (hành động: trạng thái)} & \textbf{Ghi chú} \\ \hline
 \endhead
+\hline
+\endlastfoot
 1 & S(0,0) & D: V(1,0); R: H(0,1) & U và L ra ngoài lưới nên bị loại \\ \hline
 2 & V(1,0) & U: S(0,0); R: V(1,1) & S(0,0) đã có trong \texttt{parent} nên bị bỏ qua \\ \hline
 3 & H(0,1) & D: H(1,1); L: S(0,0); R: S(0,3) & S(0,0) bị bỏ qua \\ \hline
-4 & V(1,1) & U: S(0,1); L: V(1,0); R: V(1,2) & V(1,0) bị bỏ qua \\ \hline
+4 & V(1,1) & U: S(0,1); L: V(1,0); R: V(1,2) & V(1,0) bị bỏ qua \\
 \end{longtable}
 }
 
@@ -110,7 +116,7 @@ Do đó lần đầu một trạng thái được phát hiện chính là lúc n
 
 \textbf{Độ phức tạp.} Mỗi trạng thái được mở rộng tối đa một lần, mỗi lần sinh tối đa b nút con (b ≤ 4, hoặc 5 khi đang tách) và mỗi thao tác tra bảng băm là O(1). Thời gian là O(b·\textbar{}S\textbar{}) = O(\textbar{}S\textbar{}), và theo độ sâu lời giải d còn bị chặn bởi O(b$^{d}$). Bộ nhớ là O(\textbar{}S\textbar{}) vì phải giữ cả frontier lẫn \texttt{parent}. Thực tế số nút theo từng độ sâu tăng chậm hơn nhiều so với b$^{d}$ vì đồ thị trạng thái có nhiều đường song song và chu trình (Hình 2).
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{images/fig_bfs_layers.png}
 \caption{Số nút BFS mở rộng ở từng độ sâu trên màn g4\_combined\_03: tổng 5.228 nút, lời giải ở độ sâu 25. Số nút theo lớp tăng đến cực đại ở độ sâu 18–19 rồi giảm.}
@@ -124,10 +130,12 @@ DFS luôn đi sâu theo một nhánh cho đến khi gặp ngõ cụt (mọi nư�
 
 \subsubsection{Lưu đồ}
 
-\begin{sodo}[H]
+Lưu đồ của DFS được trình bày ở Sơ đồ 5.
+
+\begin{sodo}[!htbp]
 \centering
 \caption{Lưu đồ DFS}
-\includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{images/sodo5.pdf}
+\includegraphics[width=1.0\linewidth,height=0.88\textheight,keepaspectratio]{images/sodo5.pdf}
 \end{sodo}
 
 \subsubsection{Mã giả}
@@ -168,10 +176,12 @@ Ngăn xếp được viết với đỉnh ở bên phải.
 \hline
 \textbf{Bước} & \textbf{Nút lấy ra (đỉnh)} & \textbf{Nút con hợp lệ} & \textbf{Ngăn xếp sau bước} \\ \hline
 \endhead
+\hline
+\endlastfoot
 1 & S(0,0) & D: V(1,0); R: H(0,1) & H(0,1), V(1,0) \\ \hline
 2 & V(1,0) & U: S(0,0) đã thăm, bỏ; R: V(1,1) & H(0,1), V(1,1) \\ \hline
 3 & V(1,1) & U: S(0,1); L: V(1,0) đã thăm, bỏ; R: V(1,2) & H(0,1), V(1,2), S(0,1) \\ \hline
-4 & S(0,1) & D: V(1,1) đã thăm, bỏ; R: H(0,2) & H(0,1), V(1,2), H(0,2) \\ \hline
+4 & S(0,1) & D: V(1,1) đã thăm, bỏ; R: H(0,2) & H(0,1), V(1,2), H(0,2) \\
 \end{longtable}
 }
 
@@ -193,10 +203,12 @@ IDS kết hợp ưu điểm của hai giải thuật trên: tối ưu theo số 
 
 \subsubsection{Lưu đồ}
 
-\begin{sodo}[H]
+Lưu đồ của IDS được trình bày ở Sơ đồ 6.
+
+\begin{sodo}[!htbp]
 \centering
 \caption{Lưu đồ IDS}
-\includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{images/sodo6.pdf}
+\includegraphics[width=1.0\linewidth,height=0.88\textheight,keepaspectratio]{images/sodo6.pdf}
 \end{sodo}
 
 \subsubsection{Mã giả}
@@ -235,7 +247,7 @@ IDS(problem, max_depth = 100):
 
 Số nút mở rộng ở từng lượt với giới hạn 1, 2, …, 8 là \texttt{[1, 3, 6, 13, 20, 31, 44, 24]}, tổng \textbf{142 nút}, so với 41 nút của BFS. Lượt giới hạn 1 chỉ mở rộng s0; lượt giới hạn 2 mở rộng s0 cùng hai con của nó (3 nút); mỗi lượt sau lại phải đi qua toàn bộ phần đã duyệt ở lượt trước. Lượt giới hạn 8 dừng sớm (24 nút) vì gặp đích. Lời giải trả về là \textbf{DRRURDDR}, trùng với BFS.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{images/fig_ids_passes.png}
 \caption{Số nút mở rộng ở từng lượt lặp của IDS trên màn g3\_switch\_03 (thang log): tổng 7.524 nút so với 299 nút của BFS. Chỉ riêng lượt cuối (giới hạn 24) đã mở rộng 1.189 nút, nhiều hơn toàn bộ BFS.}
@@ -256,6 +268,8 @@ Số nút mở rộng ở từng lượt với giới hạn 1, 2, …, 8 là \te
 \hline
 \textbf{Tiêu chí} & \textbf{BFS} & \textbf{DFS} & \textbf{IDS} \\ \hline
 \endhead
+\hline
+\endlastfoot
 Frontier & Hàng đợi FIFO & Ngăn xếp LIFO & Ngăn xếp LIFO, giới hạn độ sâu tăng dần \\ \hline
 Thời điểm kiểm tra đích & Khi sinh nút con & Khi lấy ra khỏi ngăn xếp & Khi lấy ra khỏi ngăn xếp \\ \hline
 Chống lặp & \texttt{parent} (một lần cho mỗi trạng thái) & \texttt{visited} (một lần cho mỗi trạng thái) & \texttt{reached} (độ sâu nhỏ nhất, theo từng lượt) \\ \hline
@@ -264,6 +278,6 @@ Tối ưu theo số nước đi & Có & Không & Có \\ \hline
 Tối ưu theo \texttt{physics\_\allowbreak{}cost} & Không đảm bảo & Không & Không đảm bảo \\ \hline
 Thời gian & O(\textbar{}S\textbar{}), chặn bởi O(b$^{d}$) & O(\textbar{}S\textbar{}) & Lớn hơn BFS nhiều lần do mở rộng lại \\ \hline
 Bộ nhớ & O(\textbar{}S\textbar{}) & O(số trạng thái đã sinh) & O(\textbar{}S\textbar{}) cho mỗi lượt \\ \hline
-Phát hiện màn không giải được & Có (frontier cạn) & Có (ngăn xếp cạn) & Có (lượt không bị cắt); nếu hết \texttt{max\_\allowbreak{}depth} thì chưa kết luận \\ \hline
+Phát hiện màn không giải được & Có (frontier cạn) & Có (ngăn xếp cạn) & Có (lượt không bị cắt); nếu hết \texttt{max\_\allowbreak{}depth} thì chưa kết luận \\
 \end{longtable}
 }

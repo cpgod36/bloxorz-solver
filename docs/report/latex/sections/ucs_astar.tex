@@ -13,9 +13,11 @@ UCS (Uniform-Cost Search) mở rộng các đỉnh theo thứ tự \textbf{chi p
 \hline
 \textbf{Thành phần} & \textbf{Mô tả} \\ \hline
 \endhead
+\hline
+\endlastfoot
 \textbf{Hàng đợi ưu tiên (frontier)} & \texttt{heapq} lưu bộ $(g, \text{tie\_breaker}, s)$. \texttt{tie\_\allowbreak{}breaker} đơn điệu tăng để phá hòa khi hai đỉnh có cùng $g$, tránh so sánh trực tiếp giữa hai đối tượng \texttt{State}. \\ \hline
 \textbf{\texttt{best\_\allowbreak{}cost[s]}} & Dictionary ánh xạ mỗi trạng thái $s$ đến chi phí đường đi tốt nhất từ trạng thái đầu đến $s$ đã biết. \\ \hline
-\textbf{\texttt{parent[s]}} & Lưu cặp $(\text{state}_{\text{prev}}, \text{action})$ để truy vết đường đi khi tìm thấy đích. \\ \hline
+\textbf{\texttt{parent[s]}} & Lưu cặp $(\text{state}_{\text{prev}}, \text{action})$ để truy vết đường đi khi tìm thấy đích. \\
 \end{longtable}
 }
 
@@ -77,10 +79,12 @@ Bảng quy đổi chi phí hoàn chỉnh:
 \hline
 \textbf{Hành động} & \textbf{Chi phí} & \textbf{Công thức \& Giải thích vật lý} \\ \hline
 \endhead
+\hline
+\endlastfoot
 Lăn ngang (nằm → nằm) & $1.0$ & $\Delta h_{\text{roll}} = \frac{\sqrt{2}-1}{2} \approx 0.21$, chọn làm chuẩn baseline. \\ \hline
 Dựng đứng (nằm → đứng) & $3.0$ & $\Delta h_{\text{stand}} = \frac{\sqrt{5}-1}{2} \approx 0.62$, gấp $\approx 3\times$ baseline ($2.98 \approx 3.0$). \\ \hline
 Lật xuống (đứng → nằm) & $1.0$ & Khối tâm ở độ cao $1.0$, quay quanh cạnh đáy lên bán kính đỉnh $R = \frac{\sqrt{5}}{2} \approx 1.118 \implies \Delta h \approx 0.118$ (khoảng $0.57\times$ baseline) trước khi đổ xuống. Nhóm làm tròn lên $1.0$ để duy trì $c_{\min} = 1.0$, trực tiếp bảo toàn tính chấp nhận được (admissible) cho các cận dưới $\lceil d/2 \rceil \times c_{\min}$ của heuristic A*. \\ \hline
-Di chuyển khối lập phương $1\times 1$ & $1.0$ & Khối $1\times 1$ lăn quanh cạnh có $\Delta h = \frac{\sqrt{2}-1}{2} \approx 0.207$, bằng đúng baseline của bước lăn ngang khối nguyên. \\ \hline
+Di chuyển khối lập phương $1\times 1$ & $1.0$ & Khối $1\times 1$ lăn quanh cạnh có $\Delta h = \frac{\sqrt{2}-1}{2} \approx 0.207$, bằng đúng baseline của bước lăn ngang khối nguyên. \\
 \end{longtable}
 }
 
@@ -122,10 +126,12 @@ Nếu $h(n)$ thỏa tính chấp nhận được (admissible) — tức $h(n) \l
 \hline
 \textbf{Tiêu chí} & \textbf{UCS} & \textbf{A*} \\ \hline
 \endhead
+\hline
+\endlastfoot
 Hàm ưu tiên & $g(n)$ & $f(n) = g(n) + h(n)$ \\ \hline
 Heuristic & Không cần & Cần hàm $h(n)$ admissible \\ \hline
 Số đỉnh mở rộng & Nhiều hơn & Ít hơn (nhờ heuristic dẫn hướng) \\ \hline
-Tính tối ưu & Luôn đảm bảo & Đảm bảo khi $h$ admissible \\ \hline
+Tính tối ưu & Luôn đảm bảo & Đảm bảo khi $h$ admissible \\
 \end{longtable}
 }
 
@@ -188,15 +194,17 @@ với
 
 Trong đó:
 
-{\renewcommand{\arraystretch}{1.25}
-\begin{longtable}{|>{\raggedright\arraybackslash}p{0.109\linewidth}|>{\raggedright\arraybackslash}p{0.386\linewidth}|>{\raggedright\arraybackslash}p{0.400\linewidth}|}
+{\small\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.200\linewidth}|>{\raggedright\arraybackslash}p{0.470\linewidth}|>{\raggedright\arraybackslash}p{0.225\linewidth}|}
 \hline
 \textbf{Thành phần} & \textbf{Công thức} & \textbf{Ý nghĩa} \\ \hline
 \endhead
+\hline
+\endlastfoot
 $h_{\text{direct}}(s, X)$ & $\left\lceil \frac{\min_{c \in \text{cells}(s)} \text{manhattan}(c,\, X)}{2} \right\rceil \times c_{\min}$ & Cận dưới chi phí lăn khối nguyên đến ô $X$: mỗi bước lăn đi tối đa 2 ô. \\ \hline
 $\text{split\_cost}(c_1, c_2)$ & $\max\!\big(\text{manhattan}(c_1, c_2) - 1,\; 0\big) \times c_{\min} + c_{\text{stand}}$ & Cận dưới chi phí để 2 khối $1\times 1$ di chuyển đến cạnh nhau (hợp nhất), sau đó dựng đứng vào đích. \\ \hline
 $c_{\min}$ & $1.0$ & Chi phí bước đi tối thiểu (chung cho cả \texttt{physics\_\allowbreak{}cost} và \texttt{unit\_\allowbreak{}cost}). \\ \hline
-$c_{\text{stand}}$ & $3.0$ (\texttt{physics\_\allowbreak{}cost}) hoặc $1.0$ (\texttt{unit\_\allowbreak{}cost}) & Chi phí tối thiểu của bước cuối cùng (dựng đứng trên ô đích). \\ \hline
+$c_{\text{stand}}$ & $3.0$ (\texttt{physics\_\allowbreak{}cost}) hoặc $1.0$ (\texttt{unit\_\allowbreak{}cost}) & Chi phí tối thiểu của bước cuối cùng (dựng đứng trên ô đích). \\
 \end{longtable}
 }
 

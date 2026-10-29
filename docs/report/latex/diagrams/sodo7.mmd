@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant B as benchmark.py
+    participant P as Tiến trình con
+    participant S as Giải thuật và MetricsTracker
+    B->>P: Khởi tạo, trace_memory = False
+    P->>S: Chạy giải thuật
+    S-->>P: Đường đi và số liệu đo
+    P-->>B: Kết quả qua hàng đợi, hoặc B dừng tiến trình khi quá hạn
+    alt Thời gian chạy dưới 1 giây
+        loop Lặp lại số lần còn lại
+            B->>P: Chạy lại, trace_memory = False
+            P-->>B: Thời gian của lần chạy
+        end
+    end
+    Note over B: Thời gian báo cáo là trung vị các lần chạy
+    B->>P: Chạy thêm một lần, trace_memory = True
+    P-->>B: Bộ nhớ đỉnh
+    Note over B: Ghi một dòng vào CSV gồm trạng thái, số bước, cost, số nút, thời gian, bộ nhớ

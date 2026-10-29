@@ -1,0 +1,15 @@
+flowchart TD
+    A["Trạng thái s"] --> B["Liệt kê hành động theo thứ tự cố định<br/>U, D, L, R và S nếu đang tách"]
+    B --> C{"Còn hành động a<br/>chưa xét?"}
+    C -- "Không" --> Z(["Trả về danh sách các cặp a, s'"])
+    C -- "Có" --> D{"a là đổi khối S?"}
+    D -- "Có" --> E["Hoán đổi hai phần tử của cubes"]
+    E --> OUT["Thêm cặp a, s' vào kết quả"]
+    D -- "Không" --> F["Lăn khối hoặc di chuyển khối đang điều khiển"]
+    F --> G{"Vị trí mới hợp lệ?<br/>trong lưới, không trống,<br/>không phải cầu đóng,<br/>không đứng trên ô dễ vỡ"}
+    G -- "Không" --> C
+    G -- "Có" --> H["Áp dụng hiệu ứng công tắc:<br/>đóng mở cầu, tách khối, ghép khối"]
+    H --> I{"Khối còn được đỡ<br/>sau hiệu ứng?"}
+    I -- "Không" --> C
+    I -- "Có" --> OUT
+    OUT --> C

@@ -11,6 +11,8 @@ Một màn chơi là một lưới ký tự trong tệp JSON, kèm danh sách c�
 \hline
 \textbf{Ký tự} & \textbf{Ô} & \textbf{Ghi chú} \\ \hline
 \endhead
+\hline
+\endlastfoot
 \texttt{.} & Ô trống (void) & Không có sàn \\ \hline
 \texttt{\#} & Sàn &  \\ \hline
 \texttt{S} & Sàn, vị trí bắt đầu & Đúng 1 ô; khối bắt đầu ở tư thế đứng \\ \hline
@@ -19,7 +21,7 @@ Một màn chơi là một lưới ký tự trong tệp JSON, kèm danh sách c�
 \texttt{-} / \texttt{=} & Cầu, đóng / mở lúc đầu &  \\ \hline
 \texttt{O} & Công tắc mềm & Cần một mục trong \texttt{switches} \\ \hline
 \texttt{X} & Công tắc nặng & Cần một mục trong \texttt{switches} \\ \hline
-\texttt{T} & Công tắc tách & Cần một mục trong \texttt{switches} \\ \hline
+\texttt{T} & Công tắc tách & Cần một mục trong \texttt{switches} \\
 \end{longtable}
 }
 
@@ -41,7 +43,7 @@ Một màn chơi là một lưới ký tự trong tệp JSON, kèm danh sách c�
 \item Bộ đọc màn kiểm tra toàn bộ các ràng buộc trên. Tệp sai định dạng bị từ chối với thông báo lỗi chỉ rõ vị trí.
 \end{itemize}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth,height=0.45\textheight,keepaspectratio]{images/fig_level_groups.png}
 \caption{Bốn màn đại diện cho bốn nhóm độ khó (g1: cơ bản; g2: ô dễ vỡ; g3: công tắc và cầu; g4: kết hợp). Ký hiệu S là ô xuất phát, G là ô đích. Các ô cầu gạch chéo ở trạng thái đóng khi bắt đầu.}
@@ -58,9 +60,11 @@ Phần tĩnh của màn chơi (lưới ô, danh sách công tắc, vị trí đ�
 \hline
 \textbf{Thành phần} & \textbf{Ý nghĩa} \\ \hline
 \endhead
+\hline
+\endlastfoot
 \texttt{block} & Khi khối còn nguyên: \texttt{Block(row, col, orientation)} với tư thế \texttt{STANDING}, \texttt{HORIZONTAL} hoặc \texttt{VERTICAL}. Bằng \texttt{None} khi khối đã tách. \\ \hline
 \texttt{cubes} & Khi đã tách: \texttt{((r₁, c₁), (r₂, c₂))}, \textbf{phần tử đầu là khối đang được điều khiển}. Bằng \texttt{None} khi khối còn nguyên. \\ \hline
-\texttt{bridges} & Số nguyên dùng làm mặt nạ bit: bit thứ \emph{i} bằng 1 nghĩa là ô cầu thứ \emph{i} đang mở. \\ \hline
+\texttt{bridges} & Số nguyên dùng làm mặt nạ bit: bit thứ \emph{i} bằng 1 nghĩa là ô cầu thứ \emph{i} đang mở. \\
 \end{longtable}
 }
 
@@ -97,16 +101,18 @@ Mỗi cặp (tư thế, hướng) ánh xạ xác định tới một cặp (tư 
 \hline
 \textbf{Tư thế \textbackslash{} Hướng} & \textbf{Lên} & \textbf{Xuống} & \textbf{Trái} & \textbf{Phải} \\ \hline
 \endhead
+\hline
+\endlastfoot
 Đứng (r, c) & Dọc (r−2, c) & Dọc (r+1, c) & Ngang (r, c−2) & Ngang (r, c+1) \\ \hline
 Ngang (r, c) & Ngang (r−1, c) & Ngang (r+1, c) & Đứng (r, c−1) & Đứng (r, c+2) \\ \hline
-Dọc (r, c) & Đứng (r−1, c) & Đứng (r+2, c) & Dọc (r, c−1) & Dọc (r, c+1) \\ \hline
+Dọc (r, c) & Đứng (r−1, c) & Đứng (r+2, c) & Dọc (r, c−1) & Dọc (r, c+1) \\
 \end{longtable}
 }
 
-\begin{sodo}[H]
+\begin{sodo}[!htbp]
 \centering
 \caption{Chuyển tư thế của khối khi lăn}
-\includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{images/sodo2.pdf}
+\includegraphics[width=0.62\linewidth,height=0.3\textheight,keepaspectratio]{images/sodo2.pdf}
 \end{sodo}
 
 Khối đứng lăn thì ngã thành nằm theo hướng lăn; khối nằm lăn dọc theo trục dài thì dựng lên đứng; khối nằm lăn ngang qua trục dài thì vẫn nằm. Cả 12 ô của bảng đều có test riêng.
@@ -132,9 +138,11 @@ Sau một nước đi hợp lệ, các công tắc dưới khối được kích
 \hline
 \textbf{Loại công tắc} & \textbf{Điều kiện kích hoạt} & \textbf{Hiệu ứng} \\ \hline
 \endhead
+\hline
+\endlastfoot
 Mềm (\texttt{O}) & Bất kỳ phần nào của khối đè lên: đứng, nằm, hoặc một khối lập phương & Đóng, mở hoặc đảo các cầu liên kết \\ \hline
 Nặng (\texttt{X}) & Chỉ khối nguyên đứng thẳng trên ô & Đóng, mở hoặc đảo các cầu liên kết \\ \hline
-Tách (\texttt{T}) & Chỉ khối nguyên đứng thẳng trên ô & Khối biến mất, hai khối lập phương xuất hiện tại \texttt{targets}; khối tại \texttt{targets[0]} được điều khiển trước \\ \hline
+Tách (\texttt{T}) & Chỉ khối nguyên đứng thẳng trên ô & Khối biến mất, hai khối lập phương xuất hiện tại \texttt{targets}; khối tại \texttt{targets[0]} được điều khiển trước \\
 \end{longtable}
 }
 
@@ -154,6 +162,8 @@ Tách (\texttt{T}) & Chỉ khối nguyên đứng thẳng trên ô & Khối bi�
 \hline
 \textbf{Mã} & \textbf{Tình huống} & \textbf{Cách xử lý} \\ \hline
 \endhead
+\hline
+\endlastfoot
 EC-01 & Công tắc đóng chính cây cầu khối đang nằm lên & Khối mất chỗ đỡ, rơi xuống (thua) \\ \hline
 EC-02 & Khối lập phương đứng yên trên công tắc khi khối kia di chuyển & Không kích hoạt lại công tắc dưới khối đứng yên \\ \hline
 EC-03 & Hành động đổi khối S & Không di chuyển, không kích hoạt công tắc, giữ nguyên cầu \\ \hline
@@ -163,7 +173,7 @@ EC-06 & Một trong hai khối lập phương rơi & Thua ngay \\ \hline
 EC-07 & Khối nằm đè cùng lúc lên hai công tắc mềm & Kích hoạt lần lượt cả hai; nếu cùng đảo một cầu thì cầu đảo hai lần \\ \hline
 EC-08 & Ghép khối ngay trên ô dễ vỡ & An toàn, vì khối sau khi ghép luôn ở tư thế nằm \\ \hline
 EC-09 & Vị trí xuất hiện sau khi tách là một công tắc mềm & Công tắc mềm đó được kích hoạt ngay \\ \hline
-EC-10 & Vị trí xuất hiện sau khi tách là ô trống hoặc cầu đóng & Khối lập phương rơi (thua) \\ \hline
+EC-10 & Vị trí xuất hiện sau khi tách là ô trống hoặc cầu đóng & Khối lập phương rơi (thua) \\
 \end{longtable}
 }
 
@@ -171,10 +181,10 @@ EC-10 & Vị trí xuất hiện sau khi tách là ô trống hoặc cầu đóng
 
 Hàm \texttt{successors(s)} áp dụng \texttt{result} cho từng hành động theo thứ tự cố định và bỏ các nước đi làm khối rơi (Sơ đồ 3).
 
-\begin{sodo}[H]
+\begin{sodo}[!htbp]
 \centering
 \caption{Sinh các trạng thái kế tiếp \texttt{successors(s)}}
-\includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{images/sodo3.pdf}
+\includegraphics[width=0.95\linewidth,height=0.78\textheight,keepaspectratio]{images/sodo3.pdf}
 \end{sodo}
 
 \subsection{Kiểm tra đích}
@@ -190,8 +200,10 @@ Nhóm dùng hai hàm chi phí, cùng có dạng \texttt{cost(s, a, s')}:
 \hline
 \textbf{Hàm} & \textbf{Định nghĩa} & \textbf{Dùng cho} \\ \hline
 \endhead
+\hline
+\endlastfoot
 \texttt{unit\_\allowbreak{}cost} & Mọi nước đi tốn 1 & BFS, DFS, IDS (tối ưu theo số nước đi) \\ \hline
-\texttt{physics\_\allowbreak{}cost} & Nước đi kết thúc ở tư thế đứng tốn 3, mọi nước đi khác tốn 1 & UCS, A* \\ \hline
+\texttt{physics\_\allowbreak{}cost} & Nước đi kết thúc ở tư thế đứng tốn 3, mọi nước đi khác tốn 1 & UCS, A* \\
 \end{longtable}
 }
 
@@ -210,11 +222,13 @@ Do khối có thể lăn qua lại, từ một trạng thái có thể quay về
 \hline
 \textbf{Thuật toán} & \textbf{Cấu trúc chống lặp} & \textbf{Quy tắc} \\ \hline
 \endhead
+\hline
+\endlastfoot
 BFS & \texttt{parent} (dict) & Trạng thái đã có trong \texttt{parent} thì bỏ qua; mỗi trạng thái vào hàng đợi tối đa một lần \\ \hline
 DFS & \texttt{visited} (set) & Đánh dấu khi đưa vào ngăn xếp; mỗi trạng thái vào ngăn xếp tối đa một lần \\ \hline
 IDS & \texttt{reached} (dict: trạng thái → độ sâu nhỏ nhất) & Trong mỗi lượt, chỉ đưa lại vào ngăn xếp khi gặp ở độ sâu nhỏ hơn \\ \hline
 UCS & \texttt{best\_\allowbreak{}cost} (dict) & Chỉ đẩy vào hàng đợi khi tìm được chi phí nhỏ hơn; bản sao cũ bị bỏ qua khi lấy ra \\ \hline
-A* & \texttt{best\_\allowbreak{}g} (dict) & Như UCS; heuristic nhất quán nên mỗi trạng thái được mở rộng tối đa một lần \\ \hline
+A* & \texttt{best\_\allowbreak{}g} (dict) & Như UCS; heuristic nhất quán nên mỗi trạng thái được mở rộng tối đa một lần \\
 \end{longtable}
 }
 

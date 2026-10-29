@@ -1,0 +1,25 @@
+flowchart TD
+    A(["Bắt đầu"]) --> B{"Trạng thái đầu s0<br/>là đích?"}
+    B -- "Có" --> Z1(["Trả về đường đi rỗng"])
+    B -- "Không" --> C["limit ← 0"]
+    C --> D{"limit ≤ max_depth?"}
+    D -- "Không" --> Z2(["Trả về None với hit_depth_limit = True<br/>chưa chứng minh được gì"])
+    D -- "Có" --> E["Khởi tạo lượt DLS:<br/>stack ← s0 kèm độ sâu 0<br/>reached ← s0 ánh xạ tới 0<br/>cut_off ← sai"]
+    E --> F{"stack rỗng?"}
+    F -- "Có" --> G{"cut_off = sai?"}
+    G -- "Có" --> Z3(["Trả về None: đã duyệt hết<br/>không gian, màn không giải được"])
+    G -- "Không" --> H["limit ← limit + 1"]
+    H --> D
+    F -- "Không" --> I["s, depth ← stack.pop()"]
+    I --> J{"s là đích?"}
+    J -- "Có" --> Z4(["Dựng lại đường đi và trả về"])
+    J -- "Không" --> K{"depth ≥ limit?"}
+    K -- "Có" --> L["cut_off ← đúng<br/>không mở rộng s"]
+    L --> F
+    K -- "Không" --> M["expanded ← expanded + 1<br/>Sinh các cặp a, s' rồi duyệt theo thứ tự ngược"]
+    M --> N{"Còn cặp a, s'<br/>chưa xét?"}
+    N -- "Không" --> F
+    N -- "Có" --> O{"s' chưa trong reached<br/>hoặc depth + 1 nhỏ hơn reached của s'?"}
+    O -- "Không" --> N
+    O -- "Có" --> P["reached của s' ← depth + 1<br/>parent của s' ← s, a<br/>stack.append(s', depth + 1)"]
+    P --> N

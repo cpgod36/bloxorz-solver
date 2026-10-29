@@ -11,6 +11,7 @@
 \usepackage{fancyhdr}
 \usepackage{float}
 \usepackage{longtable}
+\usepackage{makecell}
 \usepackage{tocloft}
 \usepackage{tikz}
 \usetikzlibrary{calc}
@@ -64,17 +65,11 @@
 \setlength{\headheight}{40pt}
 \pagestyle{fancy}
 \fancyhead{}
-\fancyhead[L]{
-    {\setlength{\tabcolsep}{0pt}
-    \begin{tabular}{rl}
-        \begin{picture}(25,15)(0,0)
-            \put(0,-8){\includegraphics[width=8mm, height=8mm]{images/logo.png}}
-        \end{picture} &
-        \hspace{5pt}
-        \begin{tabular}{l}
-            \textbf{\ttfamily Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM}\\
-        \end{tabular}
-    \end{tabular}}
+% Đáy logo nằm trên đường chuẩn (không chạm đường kẻ header); chữ nâng lên giữa chiều cao logo
+\fancyhead[L]{%
+    \includegraphics[height=8mm]{images/logo.png}%
+    \hspace{5pt}%
+    \raisebox{2.6mm}{\textbf{\ttfamily Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM}}%
 }
 \fancyhead[R]{}
 
@@ -102,19 +97,20 @@
 \newpage
 
 % 4. Nội dung chính
-\include{sections/thong_tin}
-\include{sections/tong_quan}
-\include{sections/hinh_thuc_hoa}
-\include{sections/bfs_dfs_ids}
-\include{sections/ucs_astar}
-\include{sections/thuc_nghiem}
-\include{sections/ket_luan}
+\input{sections/thong_tin}
+\input{sections/tong_quan}
+\input{sections/hinh_thuc_hoa}
+\input{sections/bfs_dfs_ids}
+\input{sections/ucs_astar}
+\input{sections/thuc_nghiem}
+\input{sections/ket_luan}
 
 % 5. Phụ lục
+\clearpage
 \appendix
-\include{sections/phu_luc}
+\input{sections/phu_luc}
 
 % 6. Tài liệu tham khảo
-\include{sections/tailieu}
+\input{sections/tailieu}
 
 \end{document}

@@ -1,0 +1,17 @@
+flowchart TD
+    A(["Bắt đầu"]) --> B{"Trạng thái đầu s0<br/>là đích?"}
+    B -- "Có" --> Z1(["Trả về đường đi rỗng"])
+    B -- "Không" --> C["frontier ← hàng đợi chứa s0<br/>parent ← s0 ánh xạ tới None"]
+    C --> D{"frontier rỗng?"}
+    D -- "Có" --> Z2(["Trả về None: màn không giải được"])
+    D -- "Không" --> E["s ← frontier.popleft()<br/>expanded ← expanded + 1"]
+    E --> F["Sinh các cặp a, s' theo thứ tự U, D, L, R"]
+    F --> G{"Còn cặp a, s'<br/>chưa xét?"}
+    G -- "Không" --> D
+    G -- "Có" --> H{"s' đã có trong parent?"}
+    H -- "Có" --> G
+    H -- "Không" --> I["parent của s' ← s, a"]
+    I --> J{"s' là đích?"}
+    J -- "Có" --> Z3(["Dựng lại đường đi từ parent<br/>và trả về"])
+    J -- "Không" --> K["frontier.append(s')"]
+    K --> G
