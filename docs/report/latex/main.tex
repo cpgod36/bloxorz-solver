@@ -1,0 +1,113 @@
+\documentclass[a4paper]{article}
+\usepackage{vntex}
+\usepackage{a4wide}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{makecell}
+\usepackage{tocloft}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fvextra}
+\usepackage{newunicodechar}
+\usepackage{caption}
+\usepackage[colorlinks=true, urlcolor=blue, linkcolor=black, citecolor=black, unicode=true]{hyperref}
+\usepackage{xurl}
+\renewcommand{\baselinestretch}{1.5}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\refname}{Tài liệu tham khảo}
+\setcounter{tocdepth}{2}
+\captionsetup{labelsep=period}
+
+% Sơ đồ (lưu đồ, sơ đồ quy trình) đánh số riêng, không chung với Hình
+\floatstyle{plaintop}
+\newfloat{sodo}{htbp}{los}
+\floatname{sodo}{Sơ đồ}
+
+% Ký tự Unicode ngoài bảng mã tiếng Việt
+\newunicodechar{←}{\ensuremath{\leftarrow}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{≤}{\ensuremath{\leq}}
+\newunicodechar{≥}{\ensuremath{\geq}}
+\newunicodechar{≠}{\ensuremath{\neq}}
+\newunicodechar{∅}{\ensuremath{\emptyset}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{∉}{\ensuremath{\notin}}
+\newunicodechar{∞}{\ensuremath{\infty}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{·}{\ensuremath{\cdot}}
+\newunicodechar{−}{\ensuremath{-}}
+\newunicodechar{✓}{\ensuremath{\checkmark}}
+\newunicodechar{₀}{\ensuremath{_0}}
+\newunicodechar{₁}{\ensuremath{_1}}
+\newunicodechar{₂}{\ensuremath{_2}}
+\newunicodechar{²}{\ensuremath{^2}}
+\newunicodechar{…}{\ldots}
+\newunicodechar{—}{---}
+\newunicodechar{–}{--}
+
+% Căn giữa tiêu đề Mục lục
+\renewcommand{\cfttoctitlefont}{\hfill\Large\bfseries}
+\renewcommand{\cftaftertoctitle}{\hfill}
+
+% Thiết lập Header và Footer
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{}
+% Đáy logo nằm trên đường chuẩn (không chạm đường kẻ header); chữ nâng lên giữa chiều cao logo
+\fancyhead[L]{%
+    \includegraphics[height=8mm]{images/logo.png}%
+    \hspace{5pt}%
+    \raisebox{2.6mm}{\textbf{\ttfamily Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM}}%
+}
+\fancyhead[R]{}
+
+\fancyfoot{}
+\fancyfoot[L]{\scriptsize \ttfamily Cơ sở Trí tuệ Nhân tạo}
+\fancyfoot[R]{\scriptsize \ttfamily Trang {\thepage}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+\begin{document}
+
+% 1. Trang bìa
+\include{sections/title}
+
+\thispagestyle{empty}
+\newpage
+
+% 2. Mục lục
+\vspace*{-2.5cm}
+\tableofcontents
+\newpage
+
+% 3. Nội dung chính
+\input{sections/thong_tin}
+\input{sections/danh_gia}
+\input{sections/tong_quan}
+\input{sections/hinh_thuc_hoa}
+\input{sections/bfs_dfs_ids}
+\input{sections/ucs_astar}
+\input{sections/thuc_nghiem}
+\input{sections/ket_luan}
+
+% 4. Phụ lục
+\clearpage
+\appendix
+\input{sections/phu_luc}
+
+% 5. Tài liệu tham khảo
+\input{sections/tailieu}
+
+\end{document}

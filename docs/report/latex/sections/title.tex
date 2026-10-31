@@ -1,0 +1,77 @@
+\begin{titlepage}
+% --- BẮT ĐẦU VẼ KHUNG TRANG TRÍ ---
+\begin{tikzpicture}[remember picture, overlay]
+    % 1. Định nghĩa các điểm góc của khung
+    \coordinate (TopLeft) at ($(current page.north west) + (2cm,-2cm)$);
+    \coordinate (BottomRight) at ($(current page.south east) + (-1.5cm,2cm)$);
+    \coordinate (TopRight) at (TopLeft -| BottomRight);
+    \coordinate (BottomLeft) at (TopLeft |- BottomRight);
+
+    % 2. Vẽ khung chính (Nét đôi đậm)
+    \draw[line width=2pt, double distance=2pt, color=blue!50!black] (TopLeft) rectangle (BottomRight);
+
+    % 3. Vẽ khung phụ bên trong (Nét đơn mảnh, cách khung chính 3pt)
+    \draw[line width=0.5pt, color=blue!50!black]
+        ($(TopLeft)+(3pt,-3pt)$) rectangle ($(BottomRight)+(-3pt,3pt)$);
+
+    % 4. Vẽ họa tiết trang trí ở 4 góc (Hình thoi)
+    \foreach \corner in {TopLeft, TopRight, BottomLeft, BottomRight}
+        \node[fill=blue!50!black, inner sep=0pt, minimum size=8pt, rotate=45] at (\corner) {};
+
+    % Chấm trắng nhỏ giữa hình thoi
+    \foreach \corner in {TopLeft, TopRight, BottomLeft, BottomRight}
+        \node[fill=white, inner sep=0pt, minimum size=2pt, rotate=45] at (\corner) {};
+\end{tikzpicture}
+% --- KẾT THÚC VẼ KHUNG ---
+\begin{center}
+    % --- PHẦN 1: TÊN TRƯỜNG & LOGO ---
+    \vspace*{-2.5cm}
+
+    \textbf{\large ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH}\\
+    \textbf{\large TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN}\\
+    \textbf{\large KHOA CÔNG NGHỆ THÔNG TIN}\\
+
+    \vspace{0.6cm}
+    \includegraphics[width=5cm]{images/logo.png}
+    \vspace{0.6cm}
+
+    % --- PHẦN 2: TÊN ĐỀ TÀI ---
+    \begin{tabular}{c}
+        \multicolumn{1}{c}{\textbf{{\Large BÁO CÁO ĐỒ ÁN 1}}}\\
+        \multicolumn{1}{c}{\textbf{{\LARGE CƠ SỞ TRÍ TUỆ NHÂN TẠO}}}\\
+        ~~\\
+        \hline
+        \\
+        \multicolumn{1}{c}{\textbf{{\Large Đề tài:}}}\\
+        \vspace{0.2cm}
+        \parbox{14cm}{\centering \textbf{{\LARGE BLOXORZ SOLVER}}\\[4pt]
+            \textbf{{\Large GIẢI TRÒ CHƠI BLOXORZ BẰNG CÁC THUẬT TOÁN TÌM KIẾM}}}\\
+        \\
+        \hline
+    \end{tabular}
+
+    \vspace{1cm}
+
+    % --- PHẦN 3: THÔNG TIN (Lệch phải) ---
+    \begin{flushright}
+        \begin{tabular}{r l}
+            \textbf{Giảng viên hướng dẫn:} & \textbf{Bùi Tiến Lên} \\
+            \textbf{Giảng viên thực hành:} & \textbf{Nguyễn Thanh Tình} \\
+            \textbf{Lớp:} & \textbf{24\_22} \\
+            \textbf{Nhóm thực hiện:} & \textbf{Nhóm 14} \\
+            & 1. Phan Chí Cao* -- 24120026 \\
+            & 2. Trần Văn Đức -- 24120042 \\
+            & 3. Võ Phùng Nhật Long -- 24120088 \\
+            & 4. Lâm Duy Minh -- 24120091 \\
+            & 5. Hoàng Trọng Nghĩa -- 24120103 \\
+        \end{tabular}
+    \end{flushright}
+
+    \vfill
+    % --- PHẦN 4: NGÀY THÁNG ---
+    {\footnotesize Thành phố Hồ Chí Minh, 11/2026}
+
+    \vspace{-2cm}
+
+\end{center}
+\end{titlepage}

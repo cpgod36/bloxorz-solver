@@ -1,0 +1,46 @@
+\section{Lập kế hoạch và phân công}
+
+\subsection{Phân công nhiệm vụ}
+
+Dự án được chia theo mô-đun để năm thành viên làm song song. Phần lõi (trạng thái, bảng chuyển tư thế, giao diện bài toán) được hoàn thành trước, các phần còn lại dùng chung giao diện này.
+
+{\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.221\linewidth}|>{\raggedright\arraybackslash}p{0.337\linewidth}|>{\raggedright\arraybackslash}p{0.337\linewidth}|}
+\hline
+\textbf{Thành viên} & \textbf{Mã nguồn} & \textbf{Báo cáo / Video} \\ \hline
+\endhead
+\hline
+\endlastfoot
+\textbf{Phan Chí Cao} (24120026, nhóm trưởng) & Kiến trúc tổng thể; \texttt{State} và bảng chuyển tư thế; giao diện \texttt{BloxorzProblem} (\texttt{successors}, \texttt{is\_\allowbreak{}goal}); định dạng màn chơi JSON và bộ đọc màn; tích hợp và kiểm tra mã nguồn của các thành viên & Hình thức hóa bài toán; phân công; tổng hợp báo cáo; đóng gói bài nộp \\ \hline
+\textbf{Trần Văn Đức} (24120042) & Giao diện Pygame 3D: vẽ bàn và khối, chơi bằng phím, các nút New Game / Restart / chọn màn / Solve ×4; chạy solver trên luồng riêng; hoạt ảnh phát lại lời giải & Video demo; \texttt{Source/README.md} \\ \hline
+\textbf{Võ Phùng Nhật Long} (24120088) & Luật ô đặc biệt trong \texttt{rules.py}: ô dễ vỡ, cầu, công tắc mềm/nặng/tách, tách và ghép khối; kiểm thử cho các luật & Quy ước luật chơi và các trường hợp biên \\ \hline
+\textbf{Lâm Duy Minh} (24120091) & UCS, A*, hàm chi phí, heuristic; bộ 16 màn JSON theo 4 nhóm độ khó & Mô tả UCS, A*; giải thích hàm chi phí; chứng minh heuristic chấp nhận được và nhất quán \\ \hline
+\textbf{Hoàng Trọng Nghĩa} (24120103) & BFS, DFS, IDS; mô-đun đo hiệu năng; chương trình chạy thực nghiệm, sinh bảng và biểu đồ & Mô tả BFS, DFS, IDS; phương pháp đo; bảng số liệu, biểu đồ và nhận xét thực nghiệm \\
+\end{longtable}
+}
+
+\subsection{Quy trình làm việc}
+
+\begin{itemize}
+\item \textbf{Quản lý mã nguồn.} Nhóm dùng Git. Mỗi thay đổi được một thành viên khác kiểm tra trước khi đưa vào phiên bản chính.
+\item \textbf{Kiểm thử.} Mọi thay đổi ở phần lõi và phần thuật toán đi kèm test tự động. Bộ kiểm thử gồm 212 test và được chạy lại sau mỗi thay đổi.
+\item \textbf{Tách biệt mô-đun.} Phần lõi (\texttt{bloxorz/core}) và phần thuật toán (\texttt{bloxorz/solvers}) không phụ thuộc giao diện, nên các thuật toán chạy và đo được mà không cần mở cửa sổ đồ họa.
+\item \textbf{Tiến độ.} Hoàn thiện tính năng trước ngày 25/10; chạy thực nghiệm ngày 26/10; hoàn thiện báo cáo và video ngày 28–29/10.
+\end{itemize}
+
+\subsection{Mức độ hoàn thành}
+
+{\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|l|r|}
+\hline
+\textbf{Thành viên} & \textbf{Mức độ hoàn thành} \\ \hline
+\endhead
+\hline
+\endlastfoot
+Phan Chí Cao & 100\% \\ \hline
+Trần Văn Đức & 100\% \\ \hline
+Võ Phùng Nhật Long & 100\% \\ \hline
+Lâm Duy Minh & 100\% \\ \hline
+Hoàng Trọng Nghĩa & 100\% \\
+\end{longtable}
+}

@@ -1,0 +1,27 @@
+\section{Kết luận}
+
+\subsection{Kết quả đạt được}
+
+\begin{itemize}
+\item Trò chơi Bloxorz chơi được trên giao diện Pygame, có đủ cơ chế cơ bản và các ô đặc biệt mà đề yêu cầu: ô dễ vỡ, cầu, công tắc mềm, nặng, tách, cùng cơ chế tách và ghép khối.
+\item Bài toán được hình thức hóa với trạng thái bất biến, gồm cả cấu hình cầu và khối đang điều khiển, và một bảng chuyển tư thế được kiểm thử đủ 12 trường hợp.
+\item Năm thuật toán BFS, DFS, IDS, UCS, A* được nhóm tự cài đặt, dùng chung một mô hình bài toán và một cách đo, và được so sánh trên bộ 16 màn cố định thuộc 4 nhóm độ khó.
+\end{itemize}
+
+\subsection{Nhận xét chính}
+
+\begin{itemize}
+\item \textbf{BFS là lựa chọn cân bằng nhất trong ba thuật toán không có thông tin.} BFS tối ưu theo số nước đi, mở rộng ít nút hơn IDS rất nhiều, và cho lời giải ngắn hơn hẳn DFS.
+\item \textbf{DFS nhanh nhưng lời giải kém.} DFS mở rộng ít nút nhất trên các màn khó, nhưng lời giải dài gấp 1,0 đến 10,5 lần lời giải ngắn nhất và phụ thuộc thứ tự duyệt hành động.
+\item \textbf{IDS cho cùng lời giải với BFS nhưng tốn kém nhất.} IDS có cùng số bước với BFS trên cả 16 màn. Nhưng IDS mở rộng nhiều hơn BFS 2,9 đến 38,9 lần, và vì được cài đặt trên đồ thị nên không còn lợi thế bộ nhớ.
+\item \textbf{Hàm chi phí không đồng nhất thay đổi lời giải.} Ở 3/16 màn, UCS và A* chọn đi thêm một nước để bớt một lần dựng đứng, nên tổng \texttt{physics\_\allowbreak{}cost} thấp hơn lời giải ít nước nhất. Ít nước nhất vì vậy không đồng nghĩa với rẻ nhất.
+\item \textbf{Heuristic giúp A* hiệu quả hơn UCS mà vẫn tối ưu.} A* luôn cho cùng chi phí tối ưu với UCS, và mở rộng ít hơn UCS 21,7\% số nút với \texttt{physics\_\allowbreak{}cost}, 28,8\% với \texttt{unit\_\allowbreak{}cost}. Mức giảm cao nhất là khoảng 80\% trên \texttt{g4\_\allowbreak{}combined\_\allowbreak{}01}. Heuristic đã được chứng minh chấp nhận được và nhất quán, đồng thời kiểm chứng trên toàn bộ 123.355 cạnh của 16 màn.
+\end{itemize}
+
+\subsection{Hạn chế và hướng phát triển}
+
+\begin{itemize}
+\item Bộ thử chỉ có 4 màn mỗi nhóm. Có thể mở rộng bằng các màn của trò chơi gốc hoặc sinh màn tự động để kết luận chắc chắn hơn.
+\item Heuristic dựa trên khoảng cách Manhattan, nên ít hiệu quả trên màn hẹp, dài, hoặc có cầu chắn đường. Có thể thay bằng khoảng cách đường đi ngắn nhất trên lưới đã nới lỏng (bỏ qua tư thế khối), tính trước một lần cho mỗi màn.
+\item IDS có thể dùng tập đường đi hiện tại thay cho bảng \texttt{reached} để giữ bộ nhớ tuyến tính theo độ sâu, đổi lại phải chấp nhận mở rộng lại nhiều hơn.
+\end{itemize}

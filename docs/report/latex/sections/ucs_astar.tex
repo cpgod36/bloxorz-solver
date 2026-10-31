@@ -1,0 +1,273 @@
+\section{Tìm kiếm có chi phí: UCS, A* và heuristic}
+
+\subsection{Tìm kiếm chi phí đều (UCS)}
+
+\subsubsection{Ý tưởng}
+
+UCS (Uniform-Cost Search) mở rộng các nút theo thứ tự \textbf{chi phí đường đi tích lũy tăng dần} $g(n)$. Khi chi phí mỗi bước di chuyển là không đồng nhất (ví dụ: lăn ngang tốn 1,0, dựng đứng tốn 3,0), UCS đảm bảo tìm được đường đi có \textbf{tổng chi phí nhỏ nhất}, không chỉ ít bước nhất.
+
+\subsubsection{Cấu trúc dữ liệu}
+
+{\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.306\linewidth}|>{\raggedright\arraybackslash}p{0.624\linewidth}|}
+\hline
+\textbf{Thành phần} & \textbf{Mô tả} \\ \hline
+\endhead
+\hline
+\endlastfoot
+\textbf{Hàng đợi ưu tiên (frontier)} & \texttt{heapq} lưu bộ $(g, \text{tie\_breaker}, s)$. \texttt{tie\_\allowbreak{}breaker} đơn điệu tăng để phá hòa khi hai nút có cùng $g$, tránh so sánh trực tiếp giữa hai đối tượng \texttt{State}. \\ \hline
+\textbf{\texttt{best\_\allowbreak{}cost[s]}} & Từ điển ánh xạ mỗi trạng thái $s$ đến chi phí đường đi tốt nhất từ trạng thái đầu đến $s$ đã biết. \\ \hline
+\textbf{\texttt{parent[s]}} & Lưu cặp $(\text{state}_{\text{prev}}, \text{action})$ để truy vết đường đi khi tìm thấy đích. \\
+\end{longtable}
+}
+
+\subsubsection{Mã giả}
+
+\begin{Verbatim}[breaklines=true, fontsize=\footnotesize, frame=single]
+UCS(problem, cost_fn):
+    frontier <- hàng đợi ưu tiên chứa (0, 0, s0)          # (g, thứ tự đưa vào, trạng thái)
+    best_cost <- { s0: 0 };  parent <- { s0: None }
+    trong khi frontier không rỗng:
+        (g, _, s) <- lấy ra phần tử có g nhỏ nhất
+        nếu g > best_cost[s]: bỏ qua                       # bản sao cũ (lazy deletion)
+        nếu is_goal(s): trả về reconstruct(parent, s)      # kiểm tra đích khi lấy ra
+        expanded <- expanded + 1
+        với mỗi (a, s') trong successors(s):
+            g' <- g + cost_fn(s, a, s')
+            nếu g' < best_cost.get(s', vô cùng):
+                best_cost[s'] <- g';  parent[s'] <- (s, a)
+                đưa (g', thứ tự, s') vào frontier
+    trả về None                                            # không có lời giải
+\end{Verbatim}
+
+\textbf{Các điểm then chốt.}
+
+\begin{enumerate}
+\item \textbf{Kiểm tra đích khi lấy ra} (không phải khi sinh): Đảm bảo nút được lấy ra khỏi hàng đợi luôn có chi phí tối ưu, vì mọi nút có chi phí thấp hơn đã được xử lý trước đó.
+\item \textbf{Xóa trễ (lazy deletion)}: Thay vì cập nhật vị trí nút trong hàng đợi (tốn $O(n)$), ta cho phép nhiều bản sao của cùng một nút tồn tại trong hàng đợi. Khi lấy ra một nút có $g > \text{best\_cost}[s]$, ta bỏ qua vì đã xử lý bản sao tốt hơn trước đó. Cách tiếp cận này đơn giản hơn \texttt{decrease-key} và phù hợp với \texttt{heapq} của Python (vốn không hỗ trợ sẵn \texttt{decrease-key}).
+\item \textbf{Tính đúng đắn}: UCS luôn tìm được đường đi tối ưu khi mọi chi phí bước di chuyển dương ($c(s, a, s') \ge 1{,}0$).
+\end{enumerate}
+
+\subsubsection{Hàm chi phí \texttt{physics\_\allowbreak{}cost}}
+
+Nhóm thiết kế hàm chi phí không đồng nhất dựa trên mô hình biến thiên thế năng trọng trường của vật rắn đồng chất kích thước $1 \times 1 \times 2$:
+
+Khi khối nằm trên mặt phẳng, độ cao ban đầu của khối tâm (trọng tâm) là $h_0 = 0{,}5$.
+
+\begin{enumerate}
+\item \textbf{Lăn ngang (nằm → nằm).} Khối lăn quanh trục là cạnh dài $2$, thiết diện vuông $1 \times 1$. Bán kính từ trục quay đến khối tâm là $R_{\text{roll}} = \sqrt{0{,}5^2 + 0{,}5^2} = \frac{\sqrt{2}}{2} \approx 0{,}7071$. Độ nâng khối tâm lớn nhất đạt đỉnh quỹ đạo tròn:
+\[\Delta h_{\text{roll}} = \frac{\sqrt{2}}{2} - 0{,}5 = \frac{\sqrt{2} - 1}{2} \approx 0{,}2071 \approx 0{,}21\]
+Giá trị này được chuẩn hóa làm chi phí cơ sở (\textbf{mức chuẩn = $1{,}0$}).
+\item \textbf{Dựng đứng (nằm → đứng).} Khối lật quanh trục là cạnh ngắn $1$, thiết diện chữ nhật $1 \times 2$. Bán kính từ trục quay đến khối tâm là $R_{\text{stand}} = \sqrt{0{,}5^2 + 1{,}0^2} = \frac{\sqrt{5}}{2} \approx 1{,}1180$. Độ nâng khối tâm lớn nhất:
+\[\Delta h_{\text{stand}} = \frac{\sqrt{5}}{2} - 0{,}5 = \frac{\sqrt{5} - 1}{2} \approx 0{,}6180 \approx 0{,}62\]
+\item \textbf{Tỷ số công cơ học nâng thế năng.}
+\[\frac{\Delta h_{\text{stand}}}{\Delta h_{\text{roll}}} = \frac{\sqrt{5} - 1}{\sqrt{2} - 1} \approx \frac{0{,}6180}{0{,}2071} \approx 2{,}984 \approx 3{,}0\]
+\end{enumerate}
+
+Bảng quy đổi chi phí hoàn chỉnh:
+
+{\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.292\linewidth}|>{\raggedright\arraybackslash}p{0.085\linewidth}|>{\raggedright\arraybackslash}p{0.518\linewidth}|}
+\hline
+\textbf{Hành động} & \textbf{Chi phí} & \textbf{Công thức \& Giải thích vật lý} \\ \hline
+\endhead
+\hline
+\endlastfoot
+Lăn ngang (nằm → nằm) & $1{,}0$ & $\Delta h_{\text{roll}} = \frac{\sqrt{2}-1}{2} \approx 0{,}21$, chọn làm mức chuẩn. \\ \hline
+Dựng đứng (nằm → đứng) & $3{,}0$ & $\Delta h_{\text{stand}} = \frac{\sqrt{5}-1}{2} \approx 0{,}62$, gấp $\approx 3$ lần mức chuẩn ($2{,}98 \approx 3{,}0$). \\ \hline
+Lật xuống (đứng → nằm) & $1{,}0$ & Khối tâm ở độ cao $1{,}0$, quay quanh cạnh đáy lên bán kính đỉnh $R = \frac{\sqrt{5}}{2} \approx 1{,}118 \implies \Delta h \approx 0{,}118$ (khoảng $0{,}57$ lần mức chuẩn) trước khi đổ xuống. Nhóm làm tròn lên $1{,}0$ để duy trì $c_{\min} = 1{,}0$, trực tiếp bảo toàn tính chấp nhận được (admissible) cho các cận dưới $\lceil d/2 \rceil \times c_{\min}$ của heuristic A*. \\ \hline
+Di chuyển khối lập phương $1\times 1$ & $1{,}0$ & Khối $1\times 1$ lăn quanh cạnh có $\Delta h = \frac{\sqrt{2}-1}{2} \approx 0{,}207$, bằng đúng mức chuẩn của bước lăn ngang khối nguyên. \\
+\end{longtable}
+}
+
+Hàm chi phí này tạo ra sự khác biệt bản chất giữa UCS và BFS: UCS sẽ \textbf{ưu tiên các đường lăn ngang} thay vì dựng đứng khi cả hai đều đi được đến đích, giúp giảm tổng hao tổn năng lượng.
+
+\subsubsection{Độ phức tạp}
+
+\begin{itemize}
+\item \textbf{Thời gian.} $O(|E| \log |V|) = O(|V| \log |V|)$
+\begin{itemize}
+\item Do sử dụng \textbf{xóa trễ} (không dùng thao tác \texttt{decrease-key} vốn tốn kém), mỗi cạnh chuyển trạng thái $(s, a, s')$ có thể đẩy thêm một bản sao trạng thái vào hàng đợi ưu tiên khi tìm thấy đường rẻ hơn. Kích thước tối đa của hàng đợi là $O(|E|)$, chi phí mỗi thao tác trên hàng đợi là $O(\log |E|) = O(\log |V|^2) = O(\log |V|)$.
+\item Trong không gian trạng thái của Bloxorz, bậc ra của mỗi trạng thái luôn bị chặn trên bởi một hằng số nhỏ ($\deg(s) \le 4$ khi nguyên khối, và $\deg(s) \le 5$ khi tách thành 2 khối gồm tối đa 4 hướng lăn + 1 hành động \texttt{SWITCH}). Vì vậy, tổng số cạnh thỏa mãn $|E| \le 5|V| = O(|V|)$.
+\item Do đó: $O(|E| \log |E|) = O(|V| \log |V|)$.
+\end{itemize}
+\item \textbf{Không gian.} $O(|E|) = O(|V|)$ cho \texttt{frontier} trong trường hợp xấu nhất, và $O(|V|)$ để lưu trữ bảng \texttt{best\_\allowbreak{}cost} cùng \texttt{parent}.
+\end{itemize}
+
+\subsection{Tìm kiếm A*}
+
+\subsubsection{Ý tưởng}
+
+A* là cải tiến của UCS bằng cách sử dụng hàm đánh giá:
+
+\[f(n) = g(n) + h(n)\]
+
+trong đó:
+
+\begin{itemize}
+\item $g(n)$: chi phí đường đi thực tế từ trạng thái đầu đến $n$.
+\item $h(n)$: \textbf{ước lượng} chi phí còn lại từ $n$ đến đích.
+\end{itemize}
+
+Nếu $h(n)$ thỏa tính chấp nhận được (admissible) — tức $h(n) \le h^*(n)$ với mọi $n$ — thì A* vẫn đảm bảo tìm đường đi tối ưu, nhưng mở ít nút hơn UCS nhờ ưu tiên khám phá các nút ``hứa hẹn'' gần đích hơn.
+
+\subsubsection{Khác biệt so với UCS}
+
+{\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|l|l|l|}
+\hline
+\textbf{Tiêu chí} & \textbf{UCS} & \textbf{A*} \\ \hline
+\endhead
+\hline
+\endlastfoot
+Hàm ưu tiên & $g(n)$ & $f(n) = g(n) + h(n)$ \\ \hline
+Heuristic & Không cần & Cần hàm $h(n)$ admissible \\ \hline
+Số nút mở rộng & Nhiều hơn & Ít hơn (nhờ heuristic dẫn hướng) \\ \hline
+Tính tối ưu & Luôn đảm bảo & Đảm bảo khi $h$ admissible \\
+\end{longtable}
+}
+
+Cài đặt A* kế thừa cấu trúc của UCS: hàng đợi ưu tiên sắp theo $f = g + h$ thay vì $g$, và mỗi phần tử lưu thêm $g$ để phá hòa khi hai trạng thái có cùng $f$.
+
+\subsubsection{Mã giả}
+
+\begin{Verbatim}[breaklines=true, fontsize=\footnotesize, frame=single]
+A*(problem, cost_fn, h):
+    frontier <- hàng đợi ưu tiên chứa (h(s0), 0, 0, s0)   # (f, g, thứ tự đưa vào, trạng thái)
+    best_g <- { s0: 0 };  parent <- { s0: None }
+    trong khi frontier không rỗng:
+        (f, g, _, s) <- lấy ra phần tử có f nhỏ nhất
+        nếu g > best_g[s]: bỏ qua                          # bản sao cũ (lazy deletion)
+        nếu is_goal(s): trả về reconstruct(parent, s)      # kiểm tra đích khi lấy ra
+        expanded <- expanded + 1
+        với mỗi (a, s') trong successors(s):
+            g' <- g + cost_fn(s, a, s')
+            nếu g' < best_g.get(s', vô cùng):
+                best_g[s'] <- g';  parent[s'] <- (s, a)
+                đưa (g' + h(s'), g', thứ tự, s') vào frontier
+    trả về None
+\end{Verbatim}
+
+\begin{mdframed}[linecolor=blue!50!black, backgroundcolor=blue!3]
+\textbf{Cơ chế phá hòa (tie-breaking) trong frontier.} Trong Python \texttt{heapq}, khi hai trạng thái có cùng giá trị hàm đánh giá $f = g + h$, bộ so sánh tuple sẽ xét đến trường thứ hai là \texttt{g\_\allowbreak{}cost}:
+
+\begin{enumerate}
+\item \textbf{Về mặt lý thuyết A* kinh điển (Russell \& Norvig - AIMA).} Khi cùng $f$, việc ưu tiên các nút có \textbf{$g$ lớn hơn} (tương đương $h$ nhỏ hơn — tức nút ở gần đích hơn) sẽ giúp thuật toán mở ít nút hơn và đi thẳng về đích nhanh hơn. Để cài đặt theo hướng này, người ta thường lưu số đối \texttt{-g\_\allowbreak{}cost} vào hàng đợi.
+\item \textbf{Trong mã nguồn thực tế.} Nhóm lưu \texttt{+g\_\allowbreak{}cost} vào tuple, tức ưu tiên mở nút có $g$ nhỏ hơn trước (khám phá các đường đi an toàn có chi phí thực tích lũy thấp). Cả hai cách phá hòa đều \textbf{đảm bảo 100\% tính tối ưu nghiệm} vì $h$ thỏa mãn điều kiện admissible và consistent. Trình tự phá hòa \texttt{tie++} ở trường thứ ba đảm bảo tính ổn định (FIFO) và tránh việc Python phải so sánh trực tiếp hai đối tượng \texttt{State}.
+\end{enumerate}
+\end{mdframed}
+
+\subsection{Thiết kế và phân tích tính đúng đắn của heuristic}
+
+\subsubsection{Công thức heuristic}
+
+Hàm heuristic $h(s)$ ước lượng chi phí còn lại từ trạng thái $s$ đến đích $G$:
+
+\[h(s) = \begin{cases} 0 & \text{nếu } s \text{ là trạng thái đích} \\ \text{split\_cost}(c_1, c_2) & \text{nếu } s \text{ đang tách khối} \\ \max\!\big(H(s),\; c_{\text{stand}}\big) & \text{trường hợp còn lại} \end{cases}\]
+
+với
+\[H(s) = \min\!\Big(h_{\text{direct}}(s, G),\; \min_{T} \big[h_{\text{direct}}(s, T) + \text{split\_cost}(\text{targets}_T)\big]\Big)\]
+
+Trong đó:
+
+{\small\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.200\linewidth}|>{\raggedright\arraybackslash}p{0.470\linewidth}|>{\raggedright\arraybackslash}p{0.225\linewidth}|}
+\hline
+\textbf{Thành phần} & \textbf{Công thức} & \textbf{Ý nghĩa} \\ \hline
+\endhead
+\hline
+\endlastfoot
+$h_{\text{direct}}(s, X)$ & $\left\lceil \frac{\min_{c \in \text{cells}(s)} \text{manhattan}(c,\, X)}{2} \right\rceil \times c_{\min}$ & Cận dưới chi phí lăn khối nguyên đến ô $X$: mỗi bước lăn đi tối đa 2 ô. \\ \hline
+$\text{split\_cost}(c_1, c_2)$ & $\max\!\big(\text{manhattan}(c_1, c_2) - 1,\; 0\big) \times c_{\min} + c_{\text{stand}}$ & Cận dưới chi phí để 2 khối $1\times 1$ di chuyển đến cạnh nhau (hợp nhất), sau đó dựng đứng vào đích. \\ \hline
+$c_{\min}$ & $1{,}0$ & Chi phí bước đi tối thiểu (chung cho cả \texttt{physics\_\allowbreak{}cost} và \texttt{unit\_\allowbreak{}cost}). \\ \hline
+$c_{\text{stand}}$ & $3{,}0$ (\texttt{physics\_\allowbreak{}cost}) hoặc $1{,}0$ (\texttt{unit\_\allowbreak{}cost}) & Chi phí tối thiểu của bước cuối cùng (dựng đứng trên ô đích). \\
+\end{longtable}
+}
+
+\textbf{Giải thích trực quan.}
+
+\begin{itemize}
+\item \textbf{Nhánh trực tiếp} $h_{\text{direct}}(s, G)$: Ước lượng chi phí đi thẳng đến đích, bỏ qua mọi chướng ngại vật và cầu.
+\item \textbf{Nhánh qua công tắc tách} $h_{\text{direct}}(s, T) + \text{split\_cost}(\text{targets}_T)$: Ước lượng chi phí đi đến công tắc tách $T$, rồi hai khối lập phương tìm nhau và hợp nhất.
+\item Lấy $\min$ giữa các nhánh: chọn con đường ước lượng rẻ nhất.
+\item Ép $\ge c_{\text{stand}}$: mọi trạng thái chưa phải đích đều cần ít nhất 1 bước dựng đứng.
+\end{itemize}
+
+\subsubsection{Chứng minh tính chấp nhận được (admissibility)}
+
+\textbf{Định nghĩa.} $h(s)$ là admissible nếu $0 \le h(s) \le h^*(s)$ với mọi $s$, trong đó $h^*(s)$ là chi phí tối ưu thật sự.
+
+\textbf{Chứng minh.}
+
+\begin{enumerate}
+\item \textbf{Tại đích $G$.} $h(G) = 0 = h^*(G)$. ✓
+\item \textbf{Cận dưới $c_{\text{stand}}$.} Mọi trạng thái chưa phải đích đều cần ít nhất 1 bước chuyển về đích. Bước cuối cùng buộc phải dựng khối đứng thẳng trên ô $G$, tốn tối thiểu $c_{\text{stand}}$ (3,0 với \texttt{physics\_\allowbreak{}cost}, 1,0 với \texttt{unit\_\allowbreak{}cost}). Nên $h^*(s) \ge c_{\text{stand}}$, và vì $h(s) \ge c_{\text{stand}}$ bởi phép $\max$, điều này không vi phạm.
+\item \textbf{Cận dưới khoảng cách.} Khối $1\times 1\times 2$ lăn tối đa 2 ô mỗi bước, nên $\lceil d/2 \rceil \times c_{\min}$ luôn $\le$ chi phí thực tế. Khối $1\times 1$ di chuyển 1 ô/bước nên $\max(\text{manhattan} - 1, 0) \times c_{\min}$ cũng là cận dưới.
+\item \textbf{Phép $\min$ bảo toàn admissibility.} $h_{\text{direct}}(s, G) \le h^*(s)$ (đường thẳng luôn $\le$ đường thực tế qua chướng ngại vật). Tương tự, chi phí qua $T$ cũng là cận dưới vì bỏ qua chướng ngại vật. Lấy $\min$ của nhiều cận dưới vẫn là cận dưới.
+\end{enumerate}
+
+\textbf{Kiểm chứng thực nghiệm.} Sử dụng Dijkstra ngược (multi-source backward Dijkstra từ mọi trạng thái đích) để tính $h^*(s)$ chính xác cho mọi trạng thái $s$ có thể chạm tới. Kiểm tra trên toàn bộ 16 màn: \textbf{0 trạng thái vi phạm} $h(s) > h^*(s)$ trên cả \texttt{physics\_\allowbreak{}cost} và \texttt{unit\_\allowbreak{}cost}.
+
+\subsubsection{Chứng minh tính nhất quán (consistency)}
+
+\textbf{Định nghĩa.} $h(s)$ là consistent (monotone) nếu với mọi bước chuyển $s \xrightarrow{a} s'$:
+
+\[h(s) \le c(s, a, s') + h(s'), \quad \text{và}\quad h(G) = 0\]
+
+Tương đương: $h(s) - h(s') \le c(s, a, s')$ — heuristic không giảm quá nhanh so với chi phí thực.
+
+\textbf{Chứng minh qua toàn bộ 5 lớp bước chuyển trong Bloxorz.}
+
+\textbf{1. Lăn khối nguyên (khối nguyên → khối nguyên).}
+
+\begin{itemize}
+\item Lăn khối $1\times 1\times 2$ thay đổi khoảng cách Manhattan tối thiểu đến bất kỳ ô mục tiêu $X$ nào tối đa 2 ô ($\Delta d \le 2$).
+\item Do đó, $\lceil \text{dist}(s, X) / 2 \rceil$ giảm tối đa 1 mỗi bước lăn.
+\item Mỗi nhánh ứng viên trong $h(s)$ giảm tối đa $c_{\min} \le c(s, a, s')$. Vì toán tử $\min/\max$ bảo toàn cận trên của hiệu, ta có $h(s) - h(s') \le c_{\min}$.
+\item Trường hợp đặc biệt vào đích ($s' = G$): Bước cuối bắt buộc dựng đứng nên $c(s, a, G) \ge c_{\text{stand}}$. Tại 1 bước cách đích, $h(s) = c_{\text{stand}}$ và $h(G) = 0$, cho $h(s) - h(G) = c_{\text{stand}} \le c(s, a, G)$. ✓
+\end{itemize}
+
+\textbf{2. Kích hoạt công tắc tách (khối nguyên $s$ → khối tách $s'$, khi dựng đứng trên $T$).}
+
+\begin{itemize}
+\item Bước lăn đứng lên $T$ chỉ xảy ra khi khối ở đủ gần nên $h_{\text{direct}}(s, T) \le c(s, a, s')$.
+\item Khi đứng trên $T$, khối bị tách đến vị trí cố định $(t_1, t_2)$, nên $h(s') = \text{split\_cost}((t_1, t_2))$.
+\item Vì $h_{\text{direct}}(s, T) + \text{split\_cost}((t_1, t_2))$ là một trong các nhánh ứng viên trong phép $\min(.)$ định nghĩa $h(s)$:
+\end{itemize}
+
+\[h(s) \le h_{\text{direct}}(s, T) + h(s') \implies h(s) - h(s') \le h_{\text{direct}}(s, T) \le c(s, a, s'). \;\checkmark\]
+
+\textbf{3. Di chuyển một khối lập phương (khối tách $s$ → khối tách $s'$).}
+
+\begin{itemize}
+\item Một khối $1\times 1$ di chuyển 1 ô với chi phí $c(s, a, s') = c_{\min}$, thay đổi khoảng cách Manhattan giữa 2 khối tối đa 1 ô.
+\item Dưới heuristic nới lỏng $h(s) = \max(|c_1 - c_2| - 1, 0) \times c_{\min} + c_{\text{stand}}$ (cố ý nới lỏng khoảng cách đến đích để bảo toàn tính đơn điệu), $h(s)$ giảm tối đa $1 \times c_{\min} = c_{\min} = c(s, a, s')$. ✓
+\end{itemize}
+
+\textbf{4. Hợp nhất khối (khối tách $s$ → khối nguyên $s'$).}
+
+\begin{itemize}
+\item Theo luật trò chơi (mục 3.4.3), hai khối lập phương tự động hợp nhất thành khối nằm $1\times 1\times 2$ ngay khi vừa trở thành kề nhau; việc lăn đè lên khối kia là nước đi không hợp lệ (mục 3.4.2).
+\item Do đó, ngay trước bước ghép, khoảng cách Manhattan giữa hai khối luôn là $|c_1 - c_2| = 2$.
+\item Khi đó: $h(s) = \max(2 - 1, 0) \times c_{\min} + c_{\text{stand}} = c_{\min} + c_{\text{stand}}$.
+\item Khối sau khi hợp nhất là trạng thái nằm $s'$ (chưa thể là đích $G$ vì vào đích buộc phải đứng), do đó $h(s') \ge c_{\text{stand}}$.
+\item Suy ra:
+\end{itemize}
+
+\[h(s) - h(s') \le (c_{\min} + c_{\text{stand}}) - c_{\text{stand}} = c_{\min} \le c(s, a, s'). \;\checkmark\]
+
+\textbf{5. Chuyển khối điều khiển (khối tách $s$ → khối tách $s'$ qua \texttt{Action.SWITCH}).}
+
+\begin{itemize}
+\item Hành động đổi khối điều khiển chiếm 28.652 / 123.355 cạnh của đồ thị. Hành động này chỉ thay đổi chỉ số khối được chọn điều khiển, vị trí tọa độ của cả 2 khối hoàn toàn giữ nguyên.
+\item Do hàm \texttt{split\_\allowbreak{}cost} chỉ phụ thuộc vào khoảng cách Manhattan giữa hai khối $|c_1 - c_2|$, giá trị heuristic không đổi: $h(s') = h(s)$.
+\item Suy ra:
+\end{itemize}
+
+\[h(s) - h(s') = 0 \le c(s, a, s'). \;\checkmark\]
+
+\textbf{Kiểm chứng thực nghiệm toàn diện.} Quét kiểm tra toàn bộ 123.355 cạnh chuyển trạng thái có thể đạt tới (bao gồm 28.652 bước \texttt{Action.SWITCH}) trên cả 16 màn chính thức: \textbf{0 cạnh vi phạm} bất đẳng thức tam giác $h(s) \le c(s, a, s') + h(s')$ trên cả \texttt{physics\_\allowbreak{}cost} và \texttt{unit\_\allowbreak{}cost}.
+
+\begin{mdframed}[linecolor=blue!50!black, backgroundcolor=blue!3]
+\textbf{Ý nghĩa của tính nhất quán (consistent).} Với heuristic consistent, A* đảm bảo rằng mỗi nút khi được lấy ra khỏi hàng đợi ưu tiên thì $g(n)$ đã là tối ưu, nên \textbf{không bao giờ cần cập nhật lại} (re-open) bất kỳ nút nào. Điều này mạnh hơn chỉ admissible, giúp A* chạy hiệu quả hơn.
+\end{mdframed}

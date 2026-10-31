@@ -1,0 +1,11 @@
+stateDiagram-v2
+    direction LR
+    Dung: Đứng
+    Ngang: Nằm ngang
+    Doc: Nằm dọc
+    Dung --> Doc: Lên, Xuống
+    Dung --> Ngang: Trái, Phải
+    Ngang --> Dung: Trái, Phải
+    Ngang --> Ngang: Lên, Xuống
+    Doc --> Dung: Lên, Xuống
+    Doc --> Doc: Trái, Phải

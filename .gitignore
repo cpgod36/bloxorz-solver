@@ -21,3 +21,14 @@ Source/benchmark/results/
 # Submission artifacts
 *.zip
 *.rar
+
+# LaTeX build files
+docs/report/latex/*.aux
+docs/report/latex/sections/*.aux
+docs/report/latex/*.log
+docs/report/latex/*.out
+docs/report/latex/*.toc
+docs/report/latex/*.synctex.gz
+docs/report/latex/*.fdb_latexmk
+docs/report/latex/*.fls
+docs/report/latex/main.pdf
