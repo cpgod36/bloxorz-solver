@@ -1,17 +1,18 @@
-flowchart TD
-    A(["Bắt đầu"]) --> B{"Trạng thái đầu s0<br/>là đích?"}
-    B -- "Có" --> Z1(["Trả về đường đi rỗng"])
-    B -- "Không" --> C["frontier ← hàng đợi chứa s0<br/>parent ← s0 ánh xạ tới None"]
-    C --> D{"frontier rỗng?"}
-    D -- "Có" --> Z2(["Trả về None: màn không giải được"])
-    D -- "Không" --> E["s ← frontier.popleft()<br/>expanded ← expanded + 1"]
-    E --> F["Sinh các cặp a, s' theo thứ tự U, D, L, R"]
-    F --> G{"Còn cặp a, s'<br/>chưa xét?"}
-    G -- "Không" --> D
-    G -- "Có" --> H{"s' đã có trong parent?"}
-    H -- "Có" --> G
-    H -- "Không" --> I["parent của s' ← s, a"]
-    I --> J{"s' là đích?"}
-    J -- "Có" --> Z3(["Dựng lại đường đi từ parent<br/>và trả về"])
-    J -- "Không" --> K["frontier.append(s')"]
-    K --> G
+sequenceDiagram
+    participant B as benchmark.py
+    participant P as Tiến trình con
+    participant S as Giải thuật và MetricsTracker
+    B->>P: Khởi tạo, trace_memory = False
+    P->>S: Chạy giải thuật
+    S-->>P: Đường đi và số liệu đo
+    P-->>B: Kết quả qua hàng đợi, hoặc B dừng tiến trình khi quá hạn
+    alt Thời gian chạy dưới 1 giây
+        loop Lặp lại số lần còn lại
+            B->>P: Chạy lại, trace_memory = False
+            P-->>B: Thời gian của lần chạy
+        end
+    end
+    Note over B: Thời gian báo cáo là trung vị các lần chạy
+    B->>P: Chạy thêm một lần, trace_memory = True
+    P-->>B: Bộ nhớ đỉnh
+    Note over B: Ghi một dòng vào CSV gồm trạng thái, số bước, cost, số nút, thời gian, bộ nhớ

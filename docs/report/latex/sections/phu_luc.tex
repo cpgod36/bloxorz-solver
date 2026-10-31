@@ -1,15 +1,13 @@
 \section{Kết quả thực nghiệm đầy đủ}
 
-Bảng A1 liệt kê đủ 80 lượt chạy (16 màn × 5 giải thuật), lấy từ cùng tệp CSV với các bảng ở mục 6.4. Dấu \texttt{*} đánh dấu cost thấp nhất tìm được trên màn đó.
-
-\textbf{Bảng A1. Kết quả chi tiết theo từng màn}
+Các bảng dưới đây liệt kê đủ 80 lượt chạy (16 màn × 5 thuật toán), lấy từ cùng tệp CSV với các bảng ở mục 6.4. Dấu \texttt{*} đánh dấu chi phí thấp nhất tìm được trên màn đó.
 
 \emph{Nhóm g1 (cơ bản)}
 
 {\small\renewcommand{\arraystretch}{1.25}
 \begin{longtable}{|l|l|r|r|r|r|r|}
 \hline
-\textbf{Màn} & \textbf{\makecell{Giải\\ thuật}} & \textbf{\makecell{Số\\ bước}} & \textbf{Cost} & \textbf{\makecell{Số nút\\ mở rộng}} & \textbf{\makecell{Thời gian\\ (ms)}} & \textbf{\makecell{Bộ nhớ\\ đỉnh (KB)}} \\ \hline
+\textbf{Màn} & \textbf{\makecell{Thuật\\ toán}} & \textbf{\makecell{Số\\ bước}} & \textbf{Chi phí} & \textbf{\makecell{Số nút\\ mở rộng}} & \textbf{\makecell{Thời gian\\ (ms)}} & \textbf{\makecell{Bộ nhớ\\ đỉnh (KB)}} \\ \hline
 \endhead
 \hline
 \endlastfoot
@@ -41,7 +39,7 @@ g1\_basic\_04 & A* & 19 & 29 * & 37 & 1,10 & 9,8 \\
 {\small\renewcommand{\arraystretch}{1.25}
 \begin{longtable}{|l|l|r|r|r|r|r|}
 \hline
-\textbf{Màn} & \textbf{\makecell{Giải\\ thuật}} & \textbf{\makecell{Số\\ bước}} & \textbf{Cost} & \textbf{\makecell{Số nút\\ mở rộng}} & \textbf{\makecell{Thời gian\\ (ms)}} & \textbf{\makecell{Bộ nhớ\\ đỉnh (KB)}} \\ \hline
+\textbf{Màn} & \textbf{\makecell{Thuật\\ toán}} & \textbf{\makecell{Số\\ bước}} & \textbf{Chi phí} & \textbf{\makecell{Số nút\\ mở rộng}} & \textbf{\makecell{Thời gian\\ (ms)}} & \textbf{\makecell{Bộ nhớ\\ đỉnh (KB)}} \\ \hline
 \endhead
 \hline
 \endlastfoot
@@ -73,7 +71,7 @@ g2\_fragile\_04 & A* & 30 & 46 * & 104 & 2,31 & 33,1 \\
 {\small\renewcommand{\arraystretch}{1.25}
 \begin{longtable}{|l|l|r|r|r|r|r|}
 \hline
-\textbf{Màn} & \textbf{\makecell{Giải\\ thuật}} & \textbf{\makecell{Số\\ bước}} & \textbf{Cost} & \textbf{\makecell{Số nút\\ mở rộng}} & \textbf{\makecell{Thời gian\\ (ms)}} & \textbf{\makecell{Bộ nhớ\\ đỉnh (KB)}} \\ \hline
+\textbf{Màn} & \textbf{\makecell{Thuật\\ toán}} & \textbf{\makecell{Số\\ bước}} & \textbf{Chi phí} & \textbf{\makecell{Số nút\\ mở rộng}} & \textbf{\makecell{Thời gian\\ (ms)}} & \textbf{\makecell{Bộ nhớ\\ đỉnh (KB)}} \\ \hline
 \endhead
 \hline
 \endlastfoot
@@ -105,7 +103,7 @@ g3\_switch\_04 & A* & 24 & 40 * & 281 & 5,71 & 98,8 \\
 {\small\renewcommand{\arraystretch}{1.25}
 \begin{longtable}{|l|l|r|r|r|r|r|}
 \hline
-\textbf{Màn} & \textbf{\makecell{Giải\\ thuật}} & \textbf{\makecell{Số\\ bước}} & \textbf{Cost} & \textbf{\makecell{Số nút\\ mở rộng}} & \textbf{\makecell{Thời gian\\ (ms)}} & \textbf{\makecell{Bộ nhớ\\ đỉnh (KB)}} \\ \hline
+\textbf{Màn} & \textbf{\makecell{Thuật\\ toán}} & \textbf{\makecell{Số\\ bước}} & \textbf{Chi phí} & \textbf{\makecell{Số nút\\ mở rộng}} & \textbf{\makecell{Thời gian\\ (ms)}} & \textbf{\makecell{Bộ nhớ\\ đỉnh (KB)}} \\ \hline
 \endhead
 \hline
 \endlastfoot
@@ -137,9 +135,9 @@ g4\_combined\_04 & A* & 31 & 45 * & 11.315 & 204,50 & 4.630,9 \\
 Các lệnh dưới đây chạy từ thư mục \texttt{Source/} với môi trường ảo của dự án.
 
 \begin{Verbatim}[breaklines=true, fontsize=\footnotesize, frame=single]
-python -m benchmark.benchmark --output benchmark/results/<tên>.csv     # chạy toàn bộ 16 màn x 5 giải thuật
+python -m benchmark.benchmark --output benchmark/results/<tên>.csv     # chạy toàn bộ 16 màn x 5 thuật toán
 python -m benchmark.report benchmark/results/<tên>.csv                 # bảng (report_tables.md) và các Hình 5, 6, 7
 python -m benchmark.illustrations                                      # các Hình 1, 2, 3, 4
 \end{Verbatim}
 
-Số liệu trong báo cáo lấy từ lần chạy benchmark ngày 26/10/2026; máy và cấu hình chạy ở mục 6.1 và 6.2.
+Số liệu trong báo cáo lấy từ lần chạy benchmark ngày 26/10/2026; máy và cấu hình chạy ở mục 6.1 và 6.2. Các hình trong báo cáo được sinh từ cùng dữ liệu bằng hai lệnh trên, sau đó chuyển nhãn trên hình sang tiếng Việt.

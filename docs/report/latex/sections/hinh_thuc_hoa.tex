@@ -1,10 +1,10 @@
-\section{Hình thức hoá bài toán tìm kiếm}
+\section{Hình thức hóa bài toán tìm kiếm}
 
 Mục này mô tả bài toán theo đúng các thành phần của một bài toán tìm kiếm: trạng thái, hành động, mô hình chuyển trạng thái, kiểm tra đích, hàm chi phí và heuristic. Mục cuối trình bày cách các thuật toán tránh duyệt lại trạng thái. Toàn bộ mô hình nằm trong \texttt{bloxorz/core} và được mọi thuật toán dùng chung.
 
 \subsection{Màn chơi và định dạng tệp}
 
-Một màn chơi là một lưới ký tự trong tệp JSON, kèm danh sách công tắc. Toạ độ ghi dạng \texttt{[hàng, cột]}, bắt đầu từ 0, hàng 0 ở trên cùng.
+Một màn chơi là một lưới ký tự trong tệp JSON, kèm danh sách công tắc. Tọa độ ghi dạng \texttt{[hàng, cột]}, bắt đầu từ 0, hàng 0 ở trên cùng.
 
 {\renewcommand{\arraystretch}{1.25}
 \begin{longtable}{|l|l|l|}
@@ -75,7 +75,7 @@ Phần tĩnh của màn chơi (lưới ô, danh sách công tắc, vị trí đ�
 \item \textbf{Mặt nạ bit thay cho tập hợp.} Một số nguyên vừa gọn bộ nhớ, vừa cho phép đóng, mở hay đảo nhiều cầu cùng lúc bằng một phép toán bit (mục 3.4.3).
 \end{itemize}
 
-\textbf{Kích thước không gian trạng thái.} Với lưới R×C và m ô cầu, số trạng thái nhiều nhất là 3·R·C·2$^{m}$ (khối nguyên) cộng (R·C)²·2$^{m}$ (khối đã tách). Không gian hữu hạn là cơ sở để chứng minh các thuật toán ở mục 4 và 5 luôn dừng. Trong thực tế số trạng thái đạt tới được nhỏ hơn nhiều: màn lớn nhất (\texttt{g4\_\allowbreak{}combined\_\allowbreak{}04}) có 13 889 trạng thái đạt tới được.
+\textbf{Kích thước không gian trạng thái.} Với lưới R×C và m ô cầu, số trạng thái nhiều nhất là 3·R·C·2$^{m}$ (khối nguyên) cộng (R·C)²·2$^{m}$ (khối đã tách). Không gian hữu hạn là cơ sở để chứng minh các thuật toán ở mục 4 và 5 luôn dừng. Trong thực tế số trạng thái đạt tới được nhỏ hơn nhiều: màn lớn nhất (\texttt{g4\_\allowbreak{}combined\_\allowbreak{}04}) có 13.889 trạng thái đạt tới được.
 
 \subsection{Hành động}
 
@@ -119,7 +119,7 @@ Khối đứng lăn thì ngã thành nằm theo hướng lăn; khối nằm lăn
 
 \subsubsection{Tính hợp lệ của nước đi}
 
-Một vị trí là hợp lệ khi thoả \textbf{mọi} điều kiện sau:
+Một vị trí là hợp lệ khi thỏa \textbf{mọi} điều kiện sau:
 
 \begin{itemize}
 \item mọi ô khối chiếm đều nằm trong lưới, không phải ô trống và không phải cầu đang đóng (cầu đóng được coi như ô trống);
@@ -215,7 +215,7 @@ A* dùng một heuristic ước lượng chi phí còn lại từ khoảng cách
 
 \subsection{Tránh duyệt lại trạng thái}
 
-Do khối có thể lăn qua lại, từ một trạng thái có thể quay về chính nó sau vài nước đi (chẳng hạn lăn sang phải rồi lăn lại sang trái). Đồ thị trạng thái vì vậy có \textbf{chu trình}, và nhiều đường đi khác nhau dẫn tới cùng một trạng thái. Nếu duyệt như duyệt cây, DFS có thể lặp vô hạn còn BFS lãng phí thời gian vào các nhánh trùng lặp. Cả năm thuật toán đều là \textbf{tìm kiếm trên đồ thị}: trạng thái băm được nên dùng trực tiếp làm khoá của \texttt{dict} hoặc phần tử của \texttt{set}, kiểm tra ``đã gặp'' trong thời gian O(1).
+Do khối có thể lăn qua lại, từ một trạng thái có thể quay về chính nó sau vài nước đi (chẳng hạn lăn sang phải rồi lăn lại sang trái). Đồ thị trạng thái vì vậy có \textbf{chu trình}, và nhiều đường đi khác nhau dẫn tới cùng một trạng thái. Nếu duyệt như duyệt cây, DFS có thể lặp vô hạn còn BFS lãng phí thời gian vào các nhánh trùng lặp. Cả năm thuật toán đều là \textbf{tìm kiếm trên đồ thị}: trạng thái băm được nên dùng trực tiếp làm khóa của \texttt{dict} hoặc phần tử của \texttt{set}, kiểm tra ``đã gặp'' trong thời gian O(1).
 
 {\renewcommand{\arraystretch}{1.25}
 \begin{longtable}{|>{\raggedright\arraybackslash}p{0.082\linewidth}|>{\raggedright\arraybackslash}p{0.361\linewidth}|>{\raggedright\arraybackslash}p{0.452\linewidth}|}
@@ -237,8 +237,8 @@ A* & \texttt{best\_\allowbreak{}g} (dict) & Như UCS; heuristic nhất quán nê
 Mô hình bài toán được kiểm thử tự động bằng \texttt{pytest} (212 test cho toàn bộ dự án):
 
 \begin{itemize}
-\item \textbf{Bảng chuyển tư thế:} đủ 12 cặp (tư thế, hướng), và kiểm tra lăn ngược thì về vị trí cũ.
-\item \textbf{Bộ đọc màn:} các màn hợp lệ, và từng trường hợp tệp sai định dạng.
-\item \textbf{Giao diện bài toán:} rơi khỏi bàn, rơi vào ô trống, thắng và không thắng, thứ tự hành động, đổi khối, phát lại lời giải. Trên màn 1 của trò chơi gốc, lời giải tối ưu 7 nước \texttt{RDDRRDR} đưa khối vào đích, và BFS tìm đúng lời giải này.
-\item \textbf{Luật ô đặc biệt (29 test):} ô dễ vỡ và cầu; công tắc mềm và nặng; đóng, mở, đảo cầu và cầu sập dưới chân; công tắc tách; ghép khối; va chạm giữa hai khối lập phương; và một màn có đủ chu trình tách, đổi khối, ghép lại, về đích được BFS giải đúng.
+\item \textbf{Bảng chuyển tư thế.} Đủ 12 cặp (tư thế, hướng), và kiểm tra lăn ngược thì về vị trí cũ.
+\item \textbf{Bộ đọc màn.} Các màn hợp lệ, và từng trường hợp tệp sai định dạng.
+\item \textbf{Giao diện bài toán.} Rơi khỏi bàn, rơi vào ô trống, thắng và không thắng, thứ tự hành động, đổi khối, phát lại lời giải. Trên màn 1 của trò chơi gốc, lời giải tối ưu 7 nước \texttt{RDDRRDR} đưa khối vào đích, và BFS tìm đúng lời giải này.
+\item \textbf{Luật ô đặc biệt (29 test).} Ô dễ vỡ và cầu; công tắc mềm và nặng; đóng, mở, đảo cầu và cầu sập dưới chân; công tắc tách; ghép khối; va chạm giữa hai khối lập phương; và một màn có đủ chu trình tách, đổi khối, ghép lại, về đích được BFS giải đúng.
 \end{itemize}

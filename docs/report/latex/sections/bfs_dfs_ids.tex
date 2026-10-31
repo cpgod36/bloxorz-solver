@@ -4,27 +4,27 @@ Ba thuật toán trong mục này không dùng heuristic ước lượng khoản
 
 \subsection{Khung tìm kiếm trên đồ thị dùng chung}
 
-Ba giải thuật cùng một khung; chúng chỉ khác nhau ở \textbf{cấu trúc dữ liệu của frontier} (tập các nút đã sinh nhưng chưa mở rộng) và \textbf{cách chọn nút để mở rộng tiếp theo}:
+Ba thuật toán cùng một khung; chúng chỉ khác nhau ở \textbf{cấu trúc dữ liệu của frontier} (tập các nút đã sinh nhưng chưa mở rộng) và \textbf{cách chọn nút để mở rộng tiếp theo}:
 
 \begin{Verbatim}[breaklines=true, fontsize=\footnotesize, frame=single]
 GRAPH-SEARCH(problem):
     frontier <- { s0 }                  # s0 = problem.initial_state
     reached  <- { s0 }                  # các trạng thái đã gặp, kèm con trỏ cha
-    while frontier != {}:
-        s <- CHỌN-VÀ-LẤY-RA(frontier)   # điểm khác nhau giữa các giải thuật
+    trong khi frontier không rỗng:
+        s <- CHỌN-VÀ-LẤY-RA(frontier)   # điểm khác nhau giữa các thuật toán
         nếu s là đích: dựng lại đường đi bằng cách lần ngược theo con trỏ cha
-        mở rộng s: với mỗi (a, s') in successors(s):
+        mở rộng s: với mỗi (a, s') trong successors(s):
             nếu s' chưa có trong reached:
                 ghi nhận s' (cha = s, hành động = a), đưa s' vào frontier
-    return thất bại
+    trả về thất bại
 \end{Verbatim}
 
-Khung trên kiểm tra đích lúc lấy nút ra, nên nút đích không bao giờ bị mở rộng. DFS và IDS dùng đúng cách này; BFS kiểm tra sớm hơn, ngay khi nút được sinh ra (mục 4.2.4).
+Khung trên kiểm tra đích lúc lấy nút ra, nên nút đích không bao giờ bị mở rộng. DFS và IDS dùng đúng cách này; BFS kiểm tra sớm hơn, ngay khi nút được sinh ra (mục 4.2.3).
 
 {\renewcommand{\arraystretch}{1.25}
 \begin{longtable}{|>{\raggedright\arraybackslash}p{0.083\linewidth}|>{\raggedright\arraybackslash}p{0.306\linewidth}|>{\raggedright\arraybackslash}p{0.182\linewidth}|>{\raggedright\arraybackslash}p{0.289\linewidth}|}
 \hline
-\textbf{Giải thuật} & \textbf{Frontier} & \textbf{Chọn nút} & \textbf{Ý nghĩa} \\ \hline
+\textbf{Thuật toán} & \textbf{Frontier} & \textbf{Chọn nút} & \textbf{Ý nghĩa} \\ \hline
 \endhead
 \hline
 \endlastfoot
@@ -36,23 +36,13 @@ IDS & Ngăn xếp, có giới hạn độ sâu tăng dần & Như DFS trong mỗ
 
 \textbf{Ghi nhận đường đi.} Thay vì lưu kèm danh sách hành động trong mỗi phần tử của frontier (tốn thêm bộ nhớ tỉ lệ với độ sâu cho mỗi nút), mỗi trạng thái chỉ lưu \texttt{(trạng thái cha, hành động đã dùng)} trong từ điển \texttt{parent}. Khi tìm thấy đích, đường đi được dựng bằng cách lần ngược từ đích về trạng thái đầu rồi đảo thứ tự.
 
-\textbf{Quy ước đếm số nút mở rộng (expanded nodes).} Một nút được tính là \emph{đã mở rộng} khi nó được lấy ra khỏi frontier \textbf{và} các nút con của nó được sinh ra (gọi \texttt{successors}). Nút đích không được tính vì không cần sinh nút con của nó. Quy ước này được áp dụng thống nhất cho mọi giải thuật thông qua \texttt{MetricsTracker.count\_\allowbreak{}expansion()}, nhờ vậy các con số có thể so sánh với nhau. Với IDS, số này là tổng cộng dồn qua tất cả các lượt lặp.
+\textbf{Quy ước đếm số nút mở rộng (expanded nodes).} Một nút được tính là \emph{đã mở rộng} khi nó được lấy ra khỏi frontier \textbf{và} các nút con của nó được sinh ra (gọi \texttt{successors}). Nút đích không được tính vì không cần sinh nút con của nó. Quy ước này được áp dụng thống nhất cho mọi thuật toán thông qua \texttt{MetricsTracker.count\_\allowbreak{}expansion()}, nhờ vậy các con số có thể so sánh với nhau. Với IDS, số này là tổng cộng dồn qua tất cả các lượt lặp.
 
 \subsection{Tìm kiếm theo chiều rộng (BFS)}
 
 \subsubsection{Ý tưởng}
 
 BFS mở rộng toàn bộ các trạng thái cách trạng thái đầu 0 nước đi, rồi đến 1 nước, 2 nước, … Mọi trạng thái ở độ sâu k đều được mở rộng trước mọi trạng thái ở độ sâu k+1. Frontier là hàng đợi FIFO, cài đặt bằng \texttt{collections.deque} để cả \texttt{append} (thêm vào cuối) lẫn \texttt{popleft} (lấy từ đầu) đều có chi phí O(1).
-
-\subsubsection{Lưu đồ}
-
-Lưu đồ của BFS được trình bày ở Sơ đồ 4.
-
-\begin{sodo}[!htbp]
-\centering
-\caption{Lưu đồ BFS}
-\includegraphics[width=1.0\linewidth,height=0.88\textheight,keepaspectratio]{images/sodo4.pdf}
-\end{sodo}
 
 \subsubsection{Mã giả}
 
@@ -66,7 +56,7 @@ BFS(problem):
         s <- frontier.popleft()
         expanded <- expanded + 1
         với mỗi (a, s') trong successors(s):          # thứ tự U, D, L, R (S nếu đang tách)
-            nếu s' not in parent:
+            nếu s' chưa có trong parent:
                 parent[s'] <- (s, a)
                 nếu is_goal(s'): trả về reconstruct(parent, s')   # kiểm tra đích sớm
                 frontier.append(s')
@@ -126,17 +116,7 @@ Do đó lần đầu một trạng thái được phát hiện chính là lúc n
 
 \subsubsection{Ý tưởng}
 
-DFS luôn đi sâu theo một nhánh cho đến khi gặp ngõ cụt (mọi nước đi đều dẫn đến trạng thái đã thăm hoặc không hợp lệ), rồi quay lui để thử nhánh khác. Frontier là ngăn xếp LIFO. Giải thuật được cài đặt \textbf{bằng ngăn xếp tường minh} (một \texttt{list} với \texttt{append} và \texttt{pop}) mà không dùng đệ quy, để không gặp \texttt{RecursionError} khi lời giải dài (DFS tìm được lời giải 304 nước ở màn g4\_combined\_02).
-
-\subsubsection{Lưu đồ}
-
-Lưu đồ của DFS được trình bày ở Sơ đồ 5.
-
-\begin{sodo}[!htbp]
-\centering
-\caption{Lưu đồ DFS}
-\includegraphics[width=1.0\linewidth,height=0.88\textheight,keepaspectratio]{images/sodo5.pdf}
-\end{sodo}
+DFS luôn đi sâu theo một nhánh cho đến khi gặp ngõ cụt (mọi nước đi đều dẫn đến trạng thái đã thăm hoặc không hợp lệ), rồi quay lui để thử nhánh khác. Frontier là ngăn xếp LIFO. Thuật toán được cài đặt \textbf{bằng ngăn xếp tường minh} (một \texttt{list} với \texttt{append} và \texttt{pop}) mà không dùng đệ quy, để không gặp \texttt{RecursionError} khi lời giải dài (DFS tìm được lời giải 304 nước ở màn g4\_combined\_02).
 
 \subsubsection{Mã giả}
 
@@ -152,7 +132,7 @@ DFS(problem, max_depth = None):
         nếu max_depth != None và depth >= max_depth: tiếp tục vòng lặp       # cắt nhánh
         expanded <- expanded + 1
         với mỗi (a, s') trong reversed(successors(s)):
-            nếu s' not in visited:
+            nếu s' chưa có trong visited:
                 visited.add(s');  parent[s'] <- (s, a)
                 stack.append((s', depth + 1))
     trả về None
@@ -199,17 +179,7 @@ Ngăn xếp được viết với đỉnh ở bên phải.
 
 \subsubsection{Ý tưởng}
 
-IDS kết hợp ưu điểm của hai giải thuật trên: tối ưu theo số nước đi như BFS, nhưng mỗi lượt duyệt theo kiểu DFS. Giải thuật chạy lặp lại \textbf{tìm kiếm có giới hạn độ sâu (Depth-Limited Search, DLS)} với giới hạn 0, 1, 2, … cho đến khi tìm thấy đích. Lượt lặp đầu tiên có giới hạn đủ lớn để chạm tới đích sẽ cho lời giải ngắn nhất theo số nước.
-
-\subsubsection{Lưu đồ}
-
-Lưu đồ của IDS được trình bày ở Sơ đồ 6.
-
-\begin{sodo}[!htbp]
-\centering
-\caption{Lưu đồ IDS}
-\includegraphics[width=1.0\linewidth,height=0.88\textheight,keepaspectratio]{images/sodo6.pdf}
-\end{sodo}
+IDS kết hợp ưu điểm của hai thuật toán trên: tối ưu theo số nước đi như BFS, nhưng mỗi lượt duyệt theo kiểu DFS. Thuật toán chạy lặp lại \textbf{tìm kiếm có giới hạn độ sâu (Depth-Limited Search, DLS)} với giới hạn 0, 1, 2, … cho đến khi tìm thấy đích. Lượt lặp đầu tiên có giới hạn đủ lớn để chạm tới đích sẽ cho lời giải ngắn nhất theo số nước.
 
 \subsubsection{Mã giả}
 
@@ -227,7 +197,7 @@ IDS(problem, max_depth = 100):
             ngược lại:
                 expanded <- expanded + 1
                 với mỗi (a, s') trong reversed(successors(s)):
-                    nếu s' not in reached hoặc depth + 1 < reached[s']:
+                    nếu s' chưa có trong reached hoặc depth + 1 < reached[s']:
                         reached[s'] <- depth + 1;  parent[s'] <- (s, a)
                         stack.append((s', depth + 1))
         nếu không cut_off: trả về None                 # không nút nào bị giới hạn cắt: đã duyệt hết
@@ -255,13 +225,13 @@ Số nút mở rộng ở từng lượt với giới hạn 1, 2, …, 8 là \te
 
 \subsubsection{Tính chất và chứng minh}
 
-\textbf{Tính đầy đủ.} Nếu đích ở độ sâu d* (số nước đi ngắn nhất), đến lượt giới hạn d* giải thuật sẽ tìm thấy nó (chứng minh bên dưới). Nếu đích không đạt tới được, mọi lượt đều không có đích; khi giới hạn đủ lớn để không còn nút nào bị cắt, giải thuật kết luận không giải được.
+\textbf{Tính đầy đủ.} Nếu đích ở độ sâu d* (số nước đi ngắn nhất), đến lượt giới hạn d* thuật toán sẽ tìm thấy nó (chứng minh bên dưới). Nếu đích không đạt tới được, mọi lượt đều không có đích; khi giới hạn đủ lớn để không còn nút nào bị cắt, thuật toán kết luận không giải được.
 
 \textbf{Tính tối ưu theo số nước đi.} Khẳng định: sau lượt giới hạn L, mọi trạng thái có khoảng cách ngắn nhất k ≤ L đều đã được đưa vào ngăn xếp ít nhất một lần với độ sâu đúng bằng k. Chứng minh bằng quy nạp theo k: s0 có độ sâu 0. Nếu s có khoảng cách k+1 ≤ L thì tồn tại nút cha p có khoảng cách k, được đưa vào với độ sâu k theo giả thiết và được lấy ra mở rộng với độ sâu k \textless{} L (vì k \textless{} L). Khi đó s được sinh ra với độ sâu k+1. Nó được đưa vào ngăn xếp trừ khi đã có \texttt{reached[s]} ≤ k+1; mà \texttt{reached[s]} không thể nhỏ hơn khoảng cách thực k+1, nên trong cả hai trường hợp s đã được đưa vào với độ sâu k+1. Hệ quả: lượt đầu tiên tìm thấy đích là lượt L = d*, và đường đi trả về dài d* nước. Nhờ điều kiện ``độ sâu nhỏ hơn thì cho vào lại'', phép chứng minh này không bị phá bởi thứ tự duyệt kiểu DFS.
 
 \textbf{Độ phức tạp.} Các trạng thái ở độ sâu nhỏ bị mở rộng lại ở mọi lượt, nên tổng số nút mở rộng lớn hơn BFS. Với cây có hệ số nhánh b đều, hệ số chi phí xấp xỉ b/(b−1); với đồ thị trạng thái của Bloxorz, hệ số nhánh hiệu dụng nhỏ (số nút mỗi lượt chỉ tăng khoảng 1,1 đến 1,5 lần khi giới hạn tăng thêm 1, Hình 3) nên chi phí lặp lại lớn. Thêm vào đó, một lượt với giới hạn L còn mở rộng nhiều hơn số trạng thái cách s0 tối đa L nước, do một trạng thái có thể bị mở rộng lại mỗi khi được phát hiện ở độ sâu nhỏ hơn trong cùng lượt; vì vậy lượt cuối ở Hình 3 (1.189 nút) vượt tổng của BFS (299 nút). Về bộ nhớ, \texttt{reached} và \texttt{parent} giữ mọi trạng thái của một lượt, nên IDS \textbf{không} còn bộ nhớ tuyến tính như IDS dạng cây mà cùng bậc với BFS (đo được gấp 1,2 đến 1,6 lần BFS).
 
-\subsection{So sánh lý thuyết ba giải thuật}
+\subsection{So sánh lý thuyết ba thuật toán}
 
 {\renewcommand{\arraystretch}{1.25}
 \begin{longtable}{|>{\raggedright\arraybackslash}p{0.161\linewidth}|>{\raggedright\arraybackslash}p{0.194\linewidth}|>{\raggedright\arraybackslash}p{0.200\linewidth}|>{\raggedright\arraybackslash}p{0.305\linewidth}|}
@@ -272,7 +242,6 @@ Số nút mở rộng ở từng lượt với giới hạn 1, 2, …, 8 là \te
 \endlastfoot
 Frontier & Hàng đợi FIFO & Ngăn xếp LIFO & Ngăn xếp LIFO, giới hạn độ sâu tăng dần \\ \hline
 Thời điểm kiểm tra đích & Khi sinh nút con & Khi lấy ra khỏi ngăn xếp & Khi lấy ra khỏi ngăn xếp \\ \hline
-Chống lặp & \texttt{parent} (một lần cho mỗi trạng thái) & \texttt{visited} (một lần cho mỗi trạng thái) & \texttt{reached} (độ sâu nhỏ nhất, theo từng lượt) \\ \hline
 Đầy đủ & Có & Có (nhờ \texttt{visited}) & Có \\ \hline
 Tối ưu theo số nước đi & Có & Không & Có \\ \hline
 Tối ưu theo \texttt{physics\_\allowbreak{}cost} & Không đảm bảo & Không & Không đảm bảo \\ \hline
