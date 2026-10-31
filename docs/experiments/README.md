@@ -1,6 +1,6 @@
 # Số liệu thực nghiệm
 
-Số liệu, bảng và hình dùng trong phần thực nghiệm của báo cáo ([docs/report/Nghia_BFS_DFS_IDS_Thuc_nghiem.md](../report/Nghia_BFS_DFS_IDS_Thuc_nghiem.md), mục 9).
+Số liệu, bảng và hình dùng trong phần thực nghiệm của báo cáo ([docs/BAO_CAO_NGHIA.md](../BAO_CAO_NGHIA.md), mục 9).
 
 | Tệp | Nội dung | Sinh bởi |
 |---|---|---|
