@@ -22,7 +22,7 @@ Built as Project 1 of **CSC14003 Introduction to Artificial Intelligence** at th
 - **Admissible and consistent heuristic.** Proven by hand, and checked exhaustively on all 123,355 reachable transitions of the 16 stages with zero violations.
 - **Playable GUI.** Keyboard controls, stage selection, and one-click solving with an animated replay of the solution and live search metrics.
 - **Reproducible benchmark.** 16 stages in 4 difficulty groups, four metrics per run (search time, peak memory, expanded nodes, solution length), process-isolated runs with a timeout, and a script that turns the CSV into tables and charts.
-- **212 automated tests**, covering every cell of the orientation transition table, every tile rule, and solver optimality on hand-checked stages.
+- **216 automated tests**, covering every cell of the orientation transition table, every tile rule, and solver optimality on hand-checked stages.
 
 ## Screenshots
 
