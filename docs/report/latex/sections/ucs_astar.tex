@@ -200,7 +200,7 @@ $c_{\text{stand}}$ & $3{,}0$ (\texttt{physics\_\allowbreak{}cost}) hoặc $1{,}0
 \textbf{Chứng minh.}
 
 \begin{enumerate}
-\item \textbf{Tại đích $G$.} $h(G) = 0 = h^*(G)$. ✓
+\item \textbf{Tại đích $G$.} $h(G) = 0 = h^*(G)$.
 \item \textbf{Cận dưới $c_{\text{stand}}$.} Mọi trạng thái chưa phải đích đều cần ít nhất 1 bước chuyển về đích. Bước cuối cùng buộc phải dựng khối đứng thẳng trên ô $G$, tốn tối thiểu $c_{\text{stand}}$ (3,0 với \texttt{physics\_\allowbreak{}cost}, 1,0 với \texttt{unit\_\allowbreak{}cost}). Nên $h^*(s) \ge c_{\text{stand}}$, và vì $h(s) \ge c_{\text{stand}}$ bởi phép $\max$, điều này không vi phạm.
 \item \textbf{Cận dưới khoảng cách.} Khối $1\times 1\times 2$ lăn tối đa 2 ô mỗi bước, nên $\lceil d/2 \rceil \times c_{\min}$ luôn $\le$ chi phí thực tế. Khối $1\times 1$ di chuyển 1 ô/bước nên $\max(\text{manhattan} - 1, 0) \times c_{\min}$ cũng là cận dưới.
 \item \textbf{Phép $\min$ bảo toàn admissibility.} $h_{\text{direct}}(s, G) \le h^*(s)$ (đường thẳng luôn $\le$ đường thực tế qua chướng ngại vật). Tương tự, chi phí qua $T$ cũng là cận dưới vì bỏ qua chướng ngại vật. Lấy $\min$ của nhiều cận dưới vẫn là cận dưới.
@@ -224,7 +224,7 @@ Tương đương: $h(s) - h(s') \le c(s, a, s')$ — heuristic không giảm qu�
 \item Lăn khối $1\times 1\times 2$ thay đổi khoảng cách Manhattan tối thiểu đến bất kỳ ô mục tiêu $X$ nào tối đa 2 ô ($\Delta d \le 2$).
 \item Do đó, $\lceil \text{dist}(s, X) / 2 \rceil$ giảm tối đa 1 mỗi bước lăn.
 \item Mỗi nhánh ứng viên trong $h(s)$ giảm tối đa $c_{\min} \le c(s, a, s')$. Vì toán tử $\min/\max$ bảo toàn cận trên của hiệu, ta có $h(s) - h(s') \le c_{\min}$.
-\item Trường hợp đặc biệt vào đích ($s' = G$): Bước cuối bắt buộc dựng đứng nên $c(s, a, G) \ge c_{\text{stand}}$. Tại 1 bước cách đích, $h(s) = c_{\text{stand}}$ và $h(G) = 0$, cho $h(s) - h(G) = c_{\text{stand}} \le c(s, a, G)$. ✓
+\item Trường hợp đặc biệt vào đích ($s' = G$): Bước cuối bắt buộc dựng đứng nên $c(s, a, G) \ge c_{\text{stand}}$. Tại 1 bước cách đích, $h(s) = c_{\text{stand}}$ và $h(G) = 0$, cho $h(s) - h(G) = c_{\text{stand}} \le c(s, a, G)$.
 \end{itemize}
 
 \textbf{2. Kích hoạt công tắc tách (khối nguyên $s$ → khối tách $s'$, khi dựng đứng trên $T$).}
@@ -235,13 +235,13 @@ Tương đương: $h(s) - h(s') \le c(s, a, s')$ — heuristic không giảm qu�
 \item Vì $h_{\text{direct}}(s, T) + \text{split\_cost}((t_1, t_2))$ là một trong các nhánh ứng viên trong phép $\min(.)$ định nghĩa $h(s)$:
 \end{itemize}
 
-\[h(s) \le h_{\text{direct}}(s, T) + h(s') \implies h(s) - h(s') \le h_{\text{direct}}(s, T) \le c(s, a, s'). \;\checkmark\]
+\[h(s) \le h_{\text{direct}}(s, T) + h(s') \implies h(s) - h(s') \le h_{\text{direct}}(s, T) \le c(s, a, s').\]
 
 \textbf{3. Di chuyển một khối lập phương (khối tách $s$ → khối tách $s'$).}
 
 \begin{itemize}
 \item Một khối $1\times 1$ di chuyển 1 ô với chi phí $c(s, a, s') = c_{\min}$, thay đổi khoảng cách Manhattan giữa 2 khối tối đa 1 ô.
-\item Dưới heuristic nới lỏng $h(s) = \max(|c_1 - c_2| - 1, 0) \times c_{\min} + c_{\text{stand}}$ (cố ý nới lỏng khoảng cách đến đích để bảo toàn tính đơn điệu), $h(s)$ giảm tối đa $1 \times c_{\min} = c_{\min} = c(s, a, s')$. ✓
+\item Dưới heuristic nới lỏng $h(s) = \max(|c_1 - c_2| - 1, 0) \times c_{\min} + c_{\text{stand}}$ (cố ý nới lỏng khoảng cách đến đích để bảo toàn tính đơn điệu), $h(s)$ giảm tối đa $1 \times c_{\min} = c_{\min} = c(s, a, s')$.
 \end{itemize}
 
 \textbf{4. Hợp nhất khối (khối tách $s$ → khối nguyên $s'$).}
@@ -254,7 +254,7 @@ Tương đương: $h(s) - h(s') \le c(s, a, s')$ — heuristic không giảm qu�
 \item Suy ra:
 \end{itemize}
 
-\[h(s) - h(s') \le (c_{\min} + c_{\text{stand}}) - c_{\text{stand}} = c_{\min} \le c(s, a, s'). \;\checkmark\]
+\[h(s) - h(s') \le (c_{\min} + c_{\text{stand}}) - c_{\text{stand}} = c_{\min} \le c(s, a, s').\]
 
 \textbf{5. Chuyển khối điều khiển (khối tách $s$ → khối tách $s'$ qua \texttt{Action.SWITCH}).}
 
@@ -264,7 +264,9 @@ Tương đương: $h(s) - h(s') \le c(s, a, s')$ — heuristic không giảm qu�
 \item Suy ra:
 \end{itemize}
 
-\[h(s) - h(s') = 0 \le c(s, a, s'). \;\checkmark\]
+\[h(s) - h(s') = 0 \le c(s, a, s').\]
+
+\textbf{Kết luận.} Cả 5 lớp bước chuyển đều thỏa $h(s) - h(s') \le c(s, a, s')$, cùng với $h(G) = 0$, nên heuristic nhất quán.
 
 \textbf{Kiểm chứng thực nghiệm toàn diện.} Quét kiểm tra toàn bộ 123.355 cạnh chuyển trạng thái có thể đạt tới (bao gồm 28.652 bước \texttt{Action.SWITCH}) trên cả 16 màn chính thức: \textbf{0 cạnh vi phạm} bất đẳng thức tam giác $h(s) \le c(s, a, s') + h(s')$ trên cả \texttt{physics\_\allowbreak{}cost} và \texttt{unit\_\allowbreak{}cost}.
 
