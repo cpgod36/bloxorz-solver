@@ -183,7 +183,7 @@ Hoàng Trọng Nghĩa & Claude Code & Mô-đun đo hiệu năng; khung chạy th
 
 \textbf{Thành viên tự làm và kiểm tra.} Chốt phân công giữa các thành viên và hạn nộp; quyết định cấu trúc và cách trình bày báo cáo (chuyển sang \LaTeX{}, bỏ các nội dung không cần thiết, mức hoàn thành của từng thành viên); đọc và duyệt các thay đổi trước khi đưa vào phiên bản chính.
 
-\textbf{Một số yêu cầu tiêu biểu gửi cho AI} (diễn đạt lại cho rõ ý; câu lệnh gốc ngắn hơn và dựa vào ngữ cảnh của cuộc hội thoại):
+\textbf{Một số prompt tiêu biểu}:
 \begin{itemize}
 \item ``Chuyển đề bài từ PDF sang Markdown, sau đó phân tích các yêu cầu và thang điểm, liệt kê những việc nhóm cần làm và những điểm đề bài chưa nói rõ.''
 \item ``Viết tài liệu hướng dẫn quy trình làm việc cho từng thành viên (cài đặt, Git, kiểm tra chéo), và một tệp hướng dẫn riêng cho AI agent của họ để agent giữ đúng phạm vi mã và các ràng buộc của đề.''
@@ -203,7 +203,7 @@ Hoàng Trọng Nghĩa & Claude Code & Mô-đun đo hiệu năng; khung chạy th
 
 \textbf{Thành viên tự làm và kiểm tra.} Chỉnh lại màu sắc, phông chữ và thiết kế lại các hộp trên giao diện; tự nối các nút Solve với luồng chạy solver; kiểm tra chức năng của từng nút, phím điều khiển và các nút đặc biệt; kiểm tra lại hoạt ảnh.
 
-\textbf{Một số prompt tiêu biểu} (nguyên văn):
+\textbf{Một số prompt tiêu biểu}:
 \begin{itemize}
 \item ``Design a draft GUI for a Bloxorz game''
 \item ``Add 3D and depth to game console''
@@ -215,7 +215,7 @@ Hoàng Trọng Nghĩa & Claude Code & Mô-đun đo hiệu năng; khung chạy th
 
 \textbf{Thành viên tự làm và kiểm tra.} Nghiên cứu đề bài, soạn quy ước luật chơi cho các trường hợp đề chưa nói rõ, xây dựng phần kiểm tra nước đi hợp lệ và cơ chế tách, ghép khối; tự kiểm soát toàn bộ logic và các ca kiểm thử.
 
-\textbf{Một số prompt tiêu biểu} (nguyên văn):
+\textbf{Một số prompt tiêu biểu}:
 \begin{itemize}
 \item \emph{Rà soát logic chuyển trạng thái của ô đặc biệt:} ``Hãy rà soát kỹ lưỡng toàn bộ hàm \texttt{apply\_effects} và \texttt{is\_legal} trong \texttt{bloxorz/core/rules.py} theo đúng đặc tả tại \texttt{docs/SPECIAL\_TILES.md}. Đảm bảo rằng:
 (1) Sàn dễ vỡ (\texttt{FRAGILE}) chỉ sụp đổ khi khối ở tư thế đứng (\texttt{STANDING}), khối nằm hoặc khối lập phương $1 \times 1 \times 1$ đi qua an toàn.
@@ -244,7 +244,7 @@ EC-09 \& EC-10: Khối lập phương dịch chuyển tức thời (teleport) r�
 
 \textbf{Thành viên tự làm và kiểm tra.} Tự lên ý tưởng và chỉnh sửa công thức heuristic (tách nhánh đi thẳng và nhánh qua công tắc tách $T$, nới lỏng khoảng cách khi tách khối để giữ tính nhất quán); tự thiết kế 16 màn chơi JSON chia theo 4 nhóm độ khó và bảo đảm màn nào cũng giải được; kiểm tra lại mã bằng bộ kiểm thử \texttt{pytest}, chạy script quét các cạnh chuyển trạng thái trên 16 màn và đối chiếu chi phí, số bước tối ưu giữa A*, UCS và BFS.
 
-\textbf{Một số prompt tiêu biểu} (nguyên văn):
+\textbf{Một số prompt tiêu biểu}:
 \begin{itemize}
 \item ``Viết hàm heuristic cho thuật toán A* chú ý công tắc tách khối teleport, đảm bảo admissible với cả physics\_cost và unit\_cost, đảm bảo consistency không vi phạm bất đẳng thức tam giác''
 \item ``Viết script kiểm tra từ mọi goal tính h*(s) cho tất cả trạng thái trên cả 16 màn và so sánh với h(s) kiểm tra xem có trạng thái nào vi phạm ko''
@@ -263,7 +263,7 @@ EC-09 \& EC-10: Khối lập phương dịch chuyển tức thời (teleport) r�
 
 \textbf{Thành viên tự làm và kiểm tra.} Tự cài đặt BFS (\texttt{collections.deque}, tìm kiếm trên đồ thị, tìm đường đi ngắn nhất); DFS dùng ngăn xếp tường minh, đẩy các nút con theo \texttt{reversed(successors)} để duyệt đúng thứ tự Up → Down → Left → Right và không gặp \texttt{RecursionError}; và IDS. Tự thiết kế \texttt{\_reconstruct\_path} truy vết đường đi bằng bảng con trỏ cha, và thống nhất cách đếm \texttt{expanded\_nodes}: một nút được tính khi được lấy ra khỏi frontier và sinh nút con, áp dụng giống nhau cho mọi solver. Kiểm tra bằng \texttt{pytest}; chạy thực nghiệm trên 16 màn (giới hạn 30 giây mỗi lần chạy); đối chiếu số bước tối ưu giữa BFS và IDS; đo thời gian ở lần chạy tắt \texttt{tracemalloc} để tránh sai lệch và đo bộ nhớ ở một lần chạy riêng.
 
-\textbf{Một số yêu cầu tiêu biểu gửi cho AI} (diễn đạt lại cho rõ ý):
+\textbf{Một số prompt tiêu biểu}:
 \begin{itemize}
 \item ``Viết context manager \texttt{MetricsTracker} dùng \texttt{time.perf\_counter()} và \texttt{tracemalloc} để đo \texttt{search\_time}, \texttt{peak\_memory} và \texttt{expanded\_nodes} cho Bloxorz solver, chú ý reset việc đo bộ nhớ một cách an toàn.''
 \item ``Cài đặt DFS trong \texttt{solvers} bằng ngăn xếp (list) thay vì đệ quy để tránh \texttt{RecursionError}, duyệt đúng thứ tự Up, Down, Left, Right và có cơ chế chống lặp với \texttt{State} hashable.''
