@@ -260,7 +260,7 @@ g4\_combined\_04 & 11.563 & 8.129 & 31,0 & 31 & 29,7\% \\ \hline
 \item Ở \texttt{g3\_\allowbreak{}switch\_\allowbreak{}04}: \texttt{unit\_\allowbreak{}cost} đi 23 bước (tiêu tốn $41{,}0$ \texttt{physics\_\allowbreak{}cost}), trong khi \texttt{physics\_\allowbreak{}cost} đi 24 bước (chỉ tốn $40{,}0$).
 \end{itemize}
 Thuật toán UCS và A* đã chủ động chọn đường lăn ngang dài hơn 1 bước nhằm triệt tiêu bớt một bước dựng đứng tốn kém (chi phí $3{,}0$). Minh chứng thực tế này khẳng định hàm \texttt{physics\_\allowbreak{}cost} đã thay đổi hành vi tìm kiếm theo đúng mô hình tối ưu năng lượng cơ học đã đề ra ở mục 5.1.4.
-\item \textbf{Hiệu quả tìm kiếm.} A* giảm trung bình \textbf{21,7\%} số nút mở rộng so với UCS trên \texttt{physics\_\allowbreak{}cost} và \textbf{28,8\%} trên \texttt{unit\_\allowbreak{}cost}. Heuristic phát huy hiệu quả mạnh nhất trên các màn có không gian trạng thái phức tạp và phân nhánh rộng:
+\item \textbf{Hiệu quả tìm kiếm.} Tính trên tổng số nút của 16 màn (dòng \emph{Tổng cộng} trong hai bảng trên), A* mở rộng ít hơn UCS \textbf{21,7\%} với \texttt{physics\_\allowbreak{}cost} và \textbf{28,8\%} với \texttt{unit\_\allowbreak{}cost}. Heuristic phát huy hiệu quả mạnh nhất trên các màn có không gian trạng thái phức tạp và phân nhánh rộng:
 \begin{itemize}
 \item \texttt{g4\_\allowbreak{}combined\_\allowbreak{}01}: giảm tới \textbf{80,3\%} (physics) / \textbf{76,9\%} (unit) — heuristic cắt tỉa gần như toàn bộ các nhánh đi chệch hướng khỏi mục tiêu.
 \item \texttt{g3\_\allowbreak{}switch\_\allowbreak{}02}: giảm \textbf{26,9\%} (physics) / \textbf{42,4\%} (unit) — heuristic dẫn hướng hiệu quả qua các cây cầu và công tắc.
@@ -313,7 +313,7 @@ Hoạt động đúng ngay cả khi chi phí không đồng nhất. & Hiệu su�
 \endhead
 \hline
 \endlastfoot
-Giảm đáng kể số nút mở rộng so với UCS (trung bình 21–29\%). & Cần thiết kế heuristic chặt chẽ: sai sẽ mất tính tối ưu. \\ \hline
+Giảm đáng kể số nút mở rộng so với UCS (21–29\% tính trên tổng 16 màn). & Cần thiết kế heuristic chặt chẽ: sai sẽ mất tính tối ưu. \\ \hline
 Vẫn đảm bảo tính tối ưu nhờ heuristic admissible + consistent. & Heuristic dựa trên Manhattan distance nên ít hiệu quả trên bản đồ hẹp, dài, hoặc bản đồ có nhiều cầu (khoảng cách Manhattan bị biến dạng do cầu đóng/mở làm gián đoạn đường đi thực tế). \\ \hline
 Heuristic consistent → không bao giờ mở lại nút → hiệu quả bộ nhớ. & Trên bản đồ nhỏ (dưới 100 trạng thái), chi phí tính heuristic có thể không bù được lợi ích cắt tỉa. \\ \hline
 Trên bản đồ lớn (g4), tiết kiệm tới 80\% số nút mở rộng. & Cần điều chỉnh tham số $c_{\text{stand}}$ theo hàm chi phí (đã tự động hóa). \\
