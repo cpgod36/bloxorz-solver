@@ -141,3 +141,133 @@ python -m benchmark.illustrations                                      # các H�
 \end{Verbatim}
 
 Số liệu trong báo cáo lấy từ lần chạy benchmark ngày 26/10/2026; máy và cấu hình chạy ở mục 6.1 và 6.2. Các hình trong báo cáo được sinh từ cùng dữ liệu bằng hai lệnh trên, sau đó chuyển nhãn trên hình sang tiếng Việt.
+
+\section{Sử dụng AI tạo sinh}
+% Long file and function names in \texttt cannot hyphenate; allow looser spacing here.
+\sloppy
+
+Đề bài không hạn chế việc dùng công cụ AI. Nhóm dùng AI như một trợ lý lập trình và soạn thảo, theo các nguyên tắc sau:
+
+\begin{itemize}
+\item \textbf{Thuật toán tự cài đặt.} Không dùng thư viện có sẵn chức năng tìm kiếm hay tìm đường (như \texttt{networkx}, \texttt{simpleai}, \texttt{aima}). BFS, DFS, IDS, UCS và A* được cài đặt trực tiếp trên \texttt{collections.deque}, \texttt{heapq}, \texttt{dict} và \texttt{set}.
+\item \textbf{Hiểu mã mình nộp.} Mỗi thành viên đọc lại mã do AI sinh ra trước khi đưa vào dự án và phải tự giải thích được phần việc mình phụ trách.
+\item \textbf{Kiểm chứng bằng kiểm thử.} Mọi thay đổi ở phần lõi và phần thuật toán đi kèm test tự động, và bộ kiểm thử phải chạy qua trước khi đưa thay đổi vào phiên bản chính.
+\item \textbf{Giới hạn phạm vi.} Các công cụ AI dạng agent được cung cấp một tệp hướng dẫn chung (\texttt{AGENTS.md}) ghi các ràng buộc trên và phạm vi mã của từng thành viên, để agent không sửa sang phần việc của người khác.
+\end{itemize}
+
+{\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.2\linewidth}|>{\raggedright\arraybackslash}p{0.25\linewidth}|>{\raggedright\arraybackslash}p{0.445\linewidth}|}
+\hline
+\textbf{Thành viên} & \textbf{Công cụ} & \textbf{Dùng vào việc} \\ \hline
+\endhead
+\hline
+\endlastfoot
+Phan Chí Cao & Claude Code (mô hình Claude Opus 5.5) & Phân tích đề, lập kế hoạch và quy trình làm việc; cài đặt phần lõi; rà soát mã nguồn của nhóm; tổng hợp báo cáo và README \\ \hline
+Trần Văn Đức & Antigravity & Dựng giao diện mẫu và hiệu ứng 3D; tìm hiểu các thuật toán trong đề; sửa lỗi hoạt ảnh \\ \hline
+Võ Phùng Nhật Long & Antigravity (mô hình Gemini 3.8 Flash) & Rà soát luật ô đặc biệt theo quy ước của nhóm; xây dựng bộ kiểm thử cho các trường hợp biên; chuẩn hóa mã giả và công thức trong phần viết báo cáo \\ \hline
+Lâm Duy Minh & Antigravity (mô hình Gemini 4 Argon và Gemini 3.8 Flash) & Cài đặt UCS và A*; viết script kiểm chứng heuristic trên 16 màn; phản biện docstring và chứng minh heuristic \\ \hline
+Hoàng Trọng Nghĩa & Claude Code & Mô-đun đo hiệu năng; khung chạy thực nghiệm; sinh kiểm thử; script vẽ bảng và biểu đồ \\
+\end{longtable}
+}
+
+\subsection*{Phan Chí Cao}
+
+\textbf{AI đã làm.}
+\begin{itemize}
+\item Chuyển đề bài từ PDF sang Markdown, tóm tắt thang điểm, liệt kê các việc cần làm và những điểm đề bài chưa nói rõ.
+\item Đề xuất bảng phân công và lịch làm việc; viết hướng dẫn quy trình cho thành viên và tệp hướng dẫn cho agent.
+\item Viết phần lõi \texttt{bloxorz/core/}: bảng chuyển tư thế, \texttt{State}, định dạng màn JSON và bộ đọc màn, luật hợp lệ cơ bản, \texttt{BloxorzProblem}; 64 test ban đầu. Kiểm chứng bằng màn 1 của trò chơi gốc (lời giải tối ưu 7 nước \texttt{RDDRRDR}).
+\item Rà soát mã nguồn các thành viên gửi lên và sửa các lỗi nhỏ, trong đó có việc giao diện gọi solver kèm đo bộ nhớ làm chậm lời giải.
+\item Ghép phần viết của các thành viên thành báo cáo \LaTeX{}, vẽ lại sơ đồ, chuyển nhãn biểu đồ sang tiếng Việt; viết lại hai tệp README và chụp ảnh giao diện.
+\end{itemize}
+
+\textbf{Thành viên tự làm và kiểm tra.} Chốt phân công giữa các thành viên và hạn nộp; quyết định cấu trúc và cách trình bày báo cáo (chuyển sang \LaTeX{}, bỏ các nội dung không cần thiết, mức hoàn thành của từng thành viên); đọc và duyệt các thay đổi trước khi đưa vào phiên bản chính.
+
+\textbf{Một số yêu cầu tiêu biểu gửi cho AI} (diễn đạt lại cho rõ ý; câu lệnh gốc ngắn hơn và dựa vào ngữ cảnh của cuộc hội thoại):
+\begin{itemize}
+\item ``Chuyển đề bài từ PDF sang Markdown, sau đó phân tích các yêu cầu và thang điểm, liệt kê những việc nhóm cần làm và những điểm đề bài chưa nói rõ.''
+\item ``Viết tài liệu hướng dẫn quy trình làm việc cho từng thành viên (cài đặt, Git, kiểm tra chéo), và một tệp hướng dẫn riêng cho AI agent của họ để agent giữ đúng phạm vi mã và các ràng buộc của đề.''
+\item ``Cài đặt phần lõi tôi phụ trách: biểu diễn trạng thái bất biến, bảng chuyển tư thế cho mọi cặp (tư thế, hướng), giao diện bài toán (\texttt{successors}, \texttt{is\_goal}) và bộ đọc màn JSON, kèm kiểm thử.''
+\item ``Soạn khung báo cáo theo các mục đề yêu cầu, ghép phần viết của các thành viên, viết cho người đọc là giảng viên, rồi chuyển sang \LaTeX{} theo mẫu trình bày có sẵn.''
+\end{itemize}
+
+\subsection*{Trần Văn Đức}
+
+\textbf{AI đã làm.}
+\begin{itemize}
+\item Thiết kế giao diện mẫu cho trò chơi.
+\item Thêm hiệu ứng 3D và chiều sâu cho bàn chơi.
+\item Hỗ trợ tìm hiểu các thuật toán tìm kiếm trong đề.
+\item Sửa lỗi hoạt ảnh dựng bằng Manim.
+\end{itemize}
+
+\textbf{Thành viên tự làm và kiểm tra.} Chỉnh lại màu sắc, phông chữ và thiết kế lại các hộp trên giao diện; tự nối các nút Solve với luồng chạy solver; kiểm tra chức năng của từng nút, phím điều khiển và các nút đặc biệt; kiểm tra lại hoạt ảnh.
+
+\textbf{Một số prompt tiêu biểu} (nguyên văn):
+\begin{itemize}
+\item ``Design a draft GUI for a Bloxorz game''
+\item ``Add 3D and depth to game console''
+\end{itemize}
+
+\subsection*{Võ Phùng Nhật Long}
+
+\textbf{AI đã làm.} Hỗ trợ rà soát luật ô đặc biệt theo quy ước của nhóm, sinh nhanh các ca kiểm thử cho các trường hợp biên, kiểm tra các phép toán bit dùng cho trạng thái cầu, và chuẩn hóa mã giả, công thức trong phần viết báo cáo.
+
+\textbf{Thành viên tự làm và kiểm tra.} Nghiên cứu đề bài, soạn quy ước luật chơi cho các trường hợp đề chưa nói rõ, xây dựng phần kiểm tra nước đi hợp lệ và cơ chế tách, ghép khối; tự kiểm soát toàn bộ logic và các ca kiểm thử.
+
+\textbf{Một số prompt tiêu biểu} (nguyên văn):
+\begin{itemize}
+\item \emph{Rà soát logic chuyển trạng thái của ô đặc biệt:} ``Hãy rà soát kỹ lưỡng toàn bộ hàm \texttt{apply\_effects} và \texttt{is\_legal} trong \texttt{bloxorz/core/rules.py} theo đúng đặc tả tại \texttt{docs/SPECIAL\_TILES.md}. Đảm bảo rằng:
+(1) Sàn dễ vỡ (\texttt{FRAGILE}) chỉ sụp đổ khi khối ở tư thế đứng (\texttt{STANDING}), khối nằm hoặc khối lập phương $1 \times 1 \times 1$ đi qua an toàn.
+(2) Các thao tác cập nhật cầu (\texttt{TOGGLE}, \texttt{OPEN}, \texttt{CLOSE}) được tính toán chuẩn xác bằng đại số bitwise trên số nguyên \texttt{bridges}.
+(3) Trong chế độ phân tách (\texttt{split mode}), kiểm tra cô lập khối đứng yên để không kích hoạt lại công tắc dưới chân khi khối kia di chuyển.
+(4) Tuyệt đối giữ đúng giao diện, không chỉnh sửa cấu trúc dữ liệu ngoài phạm vi module được phân công.''
+\item \emph{Xây dựng bộ kiểm thử cho các trường hợp biên:} ``Dựa trên 10 trường hợp biên đã quy ước tại \texttt{docs/SPECIAL\_TILES.md}, hãy xây dựng bộ unit test độc lập trong \texttt{Source/tests/test\_rules.py} bằng \texttt{pytest}. Cần bao phủ đầy đủ các ca biên phức tạp:
+EC-01: Cầu sập ngay dưới thân khối khi vừa kích hoạt công tắc đóng cầu.
+EC-02: Khối đứng yên trên công tắc mềm toggle không bị kích hoạt lại khi khối điều khiển bước đi.
+EC-04 \& EC-08: Tự động ghép khối khi khoảng cách Manhattan bằng 1 và chứng minh tính an toàn khi ghép khối trên ô dễ vỡ.
+EC-09 \& EC-10: Khối lập phương dịch chuyển tức thời (teleport) rơi trúng công tắc mềm hoặc rơi vào cầu đang đóng.''
+\item \emph{Chuẩn hóa phần viết báo cáo:} ``Khi viết báo cáo học thuật về thuật toán và mô hình chuyển trạng thái cho Đồ án Bloxorz, không sao chép nguyên khối mã nguồn Python dài. Hãy hướng dẫn và chuẩn hóa nội dung trong \texttt{docs/BAO\_CAO\_LONG.md} thành:
+(1) Mã giả (Pseudocode) chuẩn mực cho giải thuật tự động hợp nhất khối \texttt{TryMerge}.
+(2) Công thức đại số Boolean cho các thao tác cập nhật bitmask trạng thái cầu đạt độ phức tạp $O(1)$.
+(3) Rà soát tính chính xác của các thuật ngữ chuyên ngành (bất biến trạng thái, tính hashable cho Closed Set, kỹ thuật Object Reuse) và loại bỏ các câu cú dịch thô.''
+\end{itemize}
+
+\subsection*{Lâm Duy Minh}
+
+\textbf{AI đã làm.}
+\begin{itemize}
+\item Cài đặt UCS và A* dùng \texttt{heapq} lưu bộ \texttt{(f, g, tie\_breaker, state)}, kết hợp cơ chế xóa lười (lazy deletion).
+\item Viết script chạy Dijkstra ngược từ trạng thái đích trên cả 16 màn để kiểm chứng thực nghiệm $h(s) \le h^*(s)$, và quét kiểm tra bất đẳng thức tam giác trên mọi cạnh chuyển trạng thái.
+\item Hỗ trợ viết docstring và phản biện phần chứng minh toán học của heuristic.
+\end{itemize}
+
+\textbf{Thành viên tự làm và kiểm tra.} Tự lên ý tưởng và chỉnh sửa công thức heuristic (tách nhánh đi thẳng và nhánh qua công tắc tách $T$, nới lỏng khoảng cách khi tách khối để giữ tính nhất quán); tự thiết kế 16 màn chơi JSON chia theo 4 nhóm độ khó và bảo đảm màn nào cũng giải được; kiểm tra lại mã bằng bộ kiểm thử \texttt{pytest}, chạy script quét các cạnh chuyển trạng thái trên 16 màn và đối chiếu chi phí, số bước tối ưu giữa A*, UCS và BFS.
+
+\textbf{Một số prompt tiêu biểu} (nguyên văn):
+\begin{itemize}
+\item ``Viết hàm heuristic cho thuật toán A* chú ý công tắc tách khối teleport, đảm bảo admissible với cả physics\_cost và unit\_cost, đảm bảo consistency không vi phạm bất đẳng thức tam giác''
+\item ``Viết script kiểm tra từ mọi goal tính h*(s) cho tất cả trạng thái trên cả 16 màn và so sánh với h(s) kiểm tra xem có trạng thái nào vi phạm ko''
+\item ``Phản biện docstring đã đúng chuẩn chưa''
+\end{itemize}
+
+\subsection*{Hoàng Trọng Nghĩa}
+
+\textbf{AI đã làm.}
+\begin{itemize}
+\item Hỗ trợ viết context manager \texttt{MetricsTracker} trong \texttt{metrics.py}, kết hợp \texttt{time.perf\_counter()} và \texttt{tracemalloc} để đo \texttt{search\_time}, \texttt{peak\_memory}, \texttt{expanded\_nodes}; mô-đun này dùng chung cho mọi solver.
+\item Hỗ trợ viết khung \texttt{benchmark.py}: mỗi lần chạy solver trong một tiến trình riêng (\texttt{multiprocessing}) để cô lập bộ nhớ, có giới hạn thời gian và xuất kết quả ra CSV.
+\item Hỗ trợ sinh các tệp kiểm thử \texttt{test\_bfs.py}, \texttt{test\_dfs.py}, \texttt{test\_metrics.py}, \texttt{test\_benchmark.py}, bao phủ các ca: màn không có lời giải, trạng thái đầu đã là đích, giới hạn độ sâu của DFS/IDS, kết quả xác định, và so sánh độ dài lời giải của IDS với BFS.
+\item Hỗ trợ viết \texttt{report.py} và \texttt{illustrations.py} để sinh bảng và biểu đồ so sánh bằng \texttt{matplotlib} từ tệp CSV.
+\end{itemize}
+
+\textbf{Thành viên tự làm và kiểm tra.} Tự cài đặt BFS (\texttt{collections.deque}, tìm kiếm trên đồ thị, tìm đường đi ngắn nhất); DFS dùng ngăn xếp tường minh, đẩy các nút con theo \texttt{reversed(successors)} để duyệt đúng thứ tự Up → Down → Left → Right và không gặp \texttt{RecursionError}; và IDS. Tự thiết kế \texttt{\_reconstruct\_path} truy vết đường đi bằng bảng con trỏ cha, và thống nhất cách đếm \texttt{expanded\_nodes}: một nút được tính khi được lấy ra khỏi frontier và sinh nút con, áp dụng giống nhau cho mọi solver. Kiểm tra bằng \texttt{pytest}; chạy thực nghiệm trên 16 màn (giới hạn 30 giây mỗi lần chạy); đối chiếu số bước tối ưu giữa BFS và IDS; đo thời gian ở lần chạy tắt \texttt{tracemalloc} để tránh sai lệch và đo bộ nhớ ở một lần chạy riêng.
+
+\textbf{Một số yêu cầu tiêu biểu gửi cho AI} (diễn đạt lại cho rõ ý):
+\begin{itemize}
+\item ``Viết context manager \texttt{MetricsTracker} dùng \texttt{time.perf\_counter()} và \texttt{tracemalloc} để đo \texttt{search\_time}, \texttt{peak\_memory} và \texttt{expanded\_nodes} cho Bloxorz solver, chú ý reset việc đo bộ nhớ một cách an toàn.''
+\item ``Cài đặt DFS trong \texttt{solvers} bằng ngăn xếp (list) thay vì đệ quy để tránh \texttt{RecursionError}, duyệt đúng thứ tự Up, Down, Left, Right và có cơ chế chống lặp với \texttt{State} hashable.''
+\item ``Viết script \texttt{benchmark.py} chạy BFS, DFS, IDS, UCS, A* trên các màn chơi, dùng \texttt{multiprocessing} để cô lập bộ nhớ và có giới hạn thời gian, rồi xuất kết quả ra CSV. Sau đó viết script riêng vẽ biểu đồ so sánh bằng \texttt{matplotlib}.''
+\end{itemize}
+
+\fussy
