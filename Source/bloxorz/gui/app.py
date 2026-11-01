@@ -46,6 +46,15 @@ SOLVERS = {
     "A*": astar,
 }
 
+# Solver Metrics panel contents before any solver has run on the current stage.
+EMPTY_METRICS: dict[str, str] = {
+    "Algorithm": "-",
+    "Solution Length": "-",
+    "Expanded Nodes": "-",
+    "Search Time": "-",
+    "Cost": "-",
+}
+
 
 class BloxorzApp:
     """Top-level GUI controller for playing and solving Bloxorz stages."""
@@ -90,13 +99,7 @@ class BloxorzApp:
         self.anim_index = 0
         self.anim_timer_ms = 0
         self.anim_step_delay_ms = 210
-        self.metrics_info: dict[str, str] = {
-            "Algorithm": "-",
-            "Solution Length": "-",
-            "Expanded Nodes": "-",
-            "Search Time": "-",
-            "Cost": "-",
-        }
+        self.metrics_info: dict[str, str] = dict(EMPTY_METRICS)
         # Worker thread -> main thread channel: (kind, algo_name, result).
         # Only the main thread mutates GUI state.
         self.solver_results: queue.Queue[tuple[str, str, object]] = queue.Queue()
@@ -142,6 +145,8 @@ class BloxorzApp:
     def load_current_level(self) -> None:
         level = load_level(self.level_paths[self.level_index])
         self.problem = BloxorzProblem(level)
+        # Metrics from the previous stage's solve no longer apply.
+        self.metrics_info = dict(EMPTY_METRICS)
         self.restart_level()
 
     def restart_level(self) -> None:
